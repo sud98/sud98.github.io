@@ -4,8 +4,7 @@
           <meta charset="utf-8" />
           <title>Monitor Vendite</title>
         
-          <!-- Manifest per PWA -->
-          <link rel="manifest" href="manifest.json">
+         
         
           <!-- Libreria Supabase -->
           <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -39,11 +38,6 @@
         <div id="tabella"></div>
       
         <script>
-                // Registrazione del service worker
-                if ("serviceWorker" in navigator) 
-                {
-                  navigator.serviceWorker.register("service-worker.js");
-                }
               
                 // Inizializzazione Supabase
                 const client = supabase.createClient("https://ixarnqyrsonhshkctcki.supabase.co", "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ");
