@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>          
+          <meta charset="utf-8" />
+          <title>Monitor Vendite</title>
+        
+          <!-- Manifest per PWA -->
+          <link rel="manifest" href="manifest.json">
+        
+          <!-- Libreria Supabase -->
+          <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+          
+          <style>
+                      <!-- Creazione tabella e configurazione -->
+                      table {
+                        border-collapse: collapse;  // Unisce i bordi delle celle in un unico bordo continuo, evitando doppie linee
+                        margin: 40px auto; 
+                        font-size: 20px;
+                      }
+                      th, td {
+                        border: 1px solid #444;
+                        padding: 10px 20px;
+                      }
+                      th {
+                        background-color: #eee;
+                      }
+                      img {
+                        max-width: 80px;
+                        height: auto;
+                        border-radius: 6px;
+                      }
+          </style>
+</head>
+
+<body style="font-family:Arial; text-align:center;">
+
+        <h1>Tabella Vendite</h1>
+      
+        <div id="tabella"></div>
+      
+        <script>
+                // Registrazione del service worker
+                if ("serviceWorker" in navigator) 
+                {
+                  navigator.serviceWorker.register("service-worker.js");
+                }
+              
+                // Inizializzazione Supabase
+                const client = supabase.createClient("https://ixarnqyrsonhshkctcki.supabase.co", "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ");
+              
+                async function caricaTabella() 
+                {
+                          // Carico vendite
+                          const { data: vendite, error: errVendite } = await client.from("vendite").select("*").order("id", { ascending: true });
+                      
+                          // Carico colorazioni
+                          const { data: colorazioni, error: errColor } = await client.from("colorazioni").select("*");
+                      
+                          if (errVendite || errColor) 
+                          {
+                                    console.error("Errore:", errVendite || errColor);
+                                    document.getElementById("tabella").innerHTML = "<p>Errore nel caricamento</p>";
+                                    return;
+                          }
+              
+                          // Mappa colorazioni per id
+                          const mappaColorazioni = {};
+                          for (const c of colorazioni) 
+                          {
+                                  if (!mappaColorazioni[c.id]) 
+                                          mappaColorazioni[c.id] = [];
+                                  mappaColorazioni[c.id].push(c.percorsoimmagine);
+                          }
+              
+                          document.getElementById("tabella").innerHTML = generaHTMLTabella(vendite, mappaColorazioni);
+                }
+              
+                function generaHTMLTabella(dati, mappaColorazioni) 
+                {
+                        if (!dati || dati.length === 0) 
+                        {
+                          return "<p>Nessun dato trovato.</p>";
+                        }
+            
+                        // Colonne da mostrare (escludiamo id e prodotto_id)
+                        const colonne = Object.keys(dati[0]).filter(c => c !== "id" && c !== "prodottoid"); 
+                        let html = "<table><tr>";
+                      
+                        // Intestazioni
+                        for (const col of colonne) 
+                        {
+                                html += `<th>${col}</th>`;
+                        }
+                      
+                        // Aggiungo colonna immagini colorazione
+                        html += `<th>Immagine</th>`;
+                        html += "</tr>";
+                      
+                        // Righe
+                        for (const riga of dati) 
+                        {
+                                html += "<tr>";
+                                for (const col of colonne) 
+                                {
+                                        if (col.toLowerCase() === "immagine") 
+                                                html += `<td><img src="${riga[col]}" alt="foto"></td>`;
+                                        else if (col.toLowerCase() === "data") 
+                                        {
+                                                const soloData = new Date(riga[col]).toLocaleDateString("it-IT");
+                                                html += `<td>${soloData}</td>`;
+                                        }
+                                        else 
+                                        {
+                                                html += `<td>${riga[col]}</td>`;
+                                        }      
+                                }
+                      
+                                // Colonna immagini colorazione
+                                const imgs = mappaColorazioni[riga.colorazioneid] || [];
+                                let bloccoImg = imgs.map(src => `<img src="${src}" alt="col">`).join(" ");
+                      
+                                html += `<td>${bloccoImg}</td>`;
+                      
+                                html += "</tr>";
+                          }
+                      
+                          html += "</table>";
+                          return html;
+                }
+              
+                window.onload = caricaTabella;
+      </script>
+
+
+</body>
+</html>
