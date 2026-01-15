@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GE WoodArt</title>
 
+  <!-- Manifest per PWA -->
+  <link rel="manifest" href="manifest.json">
+                
   
   <style>
     body {
@@ -46,7 +49,15 @@
 </head>
 
 <body>
+  <script>
+    // Registrazione del service worker
+    if ("serviceWorker" in navigator) 
+    {
+            navigator.serviceWorker.register("service-worker.js");
+    }
+  </script>
 
+  
   <!-- LOGO -->
   <img src="pallo.png" alt="Logo GE WoodArt" class="logo">
 
