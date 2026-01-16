@@ -78,7 +78,7 @@
 
     <!-- Pulsanti -->
     <div class="btn-container">
-        <button class="btn btn-add">AGGIUNGI</button>
+        <button class="btn btn-add" onclick="vaiAggiungi()">AGGIUNGI</button>
         <button class="btn btn-del">ELIMINA</button>
     </div>
 
@@ -155,6 +155,12 @@
             html += "</table>";
             return html;
         }
+
+        function vaiAggiungi() 
+        {
+                        window.location.href = "page_aggiungi_vendita.html";
+        }
+
 
         window.onload = caricaTabella;
     </script>
