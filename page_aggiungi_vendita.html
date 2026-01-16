@@ -68,7 +68,6 @@
     </div>
 
     <script>
-        // Inizializzazione Supabase
         const client = supabase.createClient(
             "https://ixarnqyrsonhshkctcki.supabase.co",
             "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
@@ -123,4 +122,14 @@
 
         function selezionaRiga(tr) {
             const tutte = document.querySelectorAll("tr.selected");
-            tutte.forEach(r => r.class
+            tutte.forEach(r => r.classList.remove("selected"));
+
+            tr.classList.add("selected");
+            prodottoSelezionato = tr.getAttribute("data-id");
+        }
+
+        window.onload = caricaProdotti;
+    </script>
+
+</body>
+</html>
