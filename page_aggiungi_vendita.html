@@ -123,95 +123,110 @@
     </div>
 
     <script>
-        const client = supabase.createClient(
-            "https://ixarnqyrsonhshkctcki.supabase.co",
-            "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
-        );
+const client = supabase.createClient(
+    "https://ixarnqyrsonhshkctcki.supabase.co",
+    "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+);
 
-        let prodottoSelezionato = null;
-        let tutteLeColorazioni = [];
-        let strutturaProdotto = null;
+let prodottoSelezionato = null;
+let tutteLeColorazioni = [];
+let strutturaProdotto = null;
 
-        async function caricaProdotti() {
-            const { data: prodotti } =
-                await client.from("prodotti").select("*").order("id", { ascending: true });
+async function caricaProdotti() {
+    const { data: prodotti } =
+        await client.from("prodotti").select("*").order("id", { ascending: true });
 
-            const { data: colorazioni } =
-                await client.from("colorazioni").select("prodottoid, percorsoimmagine");
+    const { data: colorazioni } =
+        await client.from("colorazioni").select("prodottoid, percorsoimmagine");
 
-            tutteLeColorazioni = colorazioni;
-            strutturaProdotto = prodotti[0];
+    tutteLeColorazioni = colorazioni;
+    strutturaProdotto = prodotti[0];
 
-            document.getElementById("tabellaProdotti").innerHTML =
-                generaTabellaProdotti(prodotti);
+    document.getElementById("tabellaProdotti").innerHTML =
+        generaTabellaProdotti(prodotti);
 
-            // DATA CORRETTA (locale)
-            const oggi = new Date();
-            oggi.setMinutes(oggi.getMinutes() - oggi.getTimezoneOffset());
-            document.getElementById("campoData").value = oggi.toISOString().split("T")[0];
-        }
+    // DATA CORRETTA (locale)
+    const oggi = new Date();
+    oggi.setMinutes(oggi.getMinutes() - oggi.getTimezoneOffset());
+    document.getElementById("campoData").value = oggi.toISOString().split("T")[0];
 
-        function generaTabellaProdotti(dati) {
-            const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
-            const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
+    // AGGIUNGO EVENTI CLICK E DOPPIO CLICK
+    aggiungiEventiRighe();
+}
 
-            let html = "<table><tr>";
+function generaTabellaProdotti(dati) {
+    const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
+    const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
 
-            for (const col of colonne) html += `<th>${col}</th>`;
-            html += `<th>Immagine</th></tr>`;
+    let html = "<table><tr>";
 
-            for (const riga of dati) {
-                html += `<tr data-id="${riga.id}" onclick="selezionaRiga(this)" ondblclick="apriPopup(${riga.id}, this)">`;
+    for (const col of colonne) html += `<th>${col}</th>`;
+    html += `<th>Immagine</th></tr>`;
 
-                for (const col of colonne) html += `<td>${riga[col]}</td>`;
+    for (const riga of dati) {
+        html += `<tr data-id="${riga.id}">`;
 
-                const colore = tutteLeColorazioni.find(c => c.prodottoid === riga.id);
-                html += colore
-                    ? `<td><img src="${colore.percorsoimmagine}"></td>`
-                    : `<td>-</td>`;
+        for (const col of colonne) html += `<td>${riga[col]}</td>`;
 
-                html += "</tr>";
-            }
+        const colore = tutteLeColorazioni.find(c => c.prodottoid === riga.id);
+        html += colore
+            ? `<td><img src="${colore.percorsoimmagine}"></td>`
+            : `<td>-</td>`;
 
-            html += "</table>";
-            return html;
-        }
+        html += "</tr>";
+    }
 
-        function selezionaRiga(tr) {
-            document.querySelectorAll("tr.selected").forEach(r => r.classList.remove("selected"));
-            tr.classList.add("selected");
+    html += "</table>";
+    return html;
+}
 
-            prodottoSelezionato = tr.getAttribute("data-id");
+function aggiungiEventiRighe() {
+    const righe = document.querySelectorAll("table tr[data-id]");
 
-            const colonne = Object.keys(strutturaProdotto);
-            const indicePrezzo = colonne.indexOf("prezzo");
+    righe.forEach(riga => {
+        riga.addEventListener("click", () => selezionaRiga(riga));
 
-            if (indicePrezzo !== -1) {
-                const celle = tr.querySelectorAll("td");
-                document.getElementById("campoPrezzo").value = celle[indicePrezzo].innerText;
-            }
-        }
+        riga.addEventListener("dblclick", () => {
+            selezionaRiga(riga); // aggiorna prezzo
+            apriPopup(riga.dataset.id);
+        });
+    });
+}
 
-        function apriPopup(idProdotto, tr) {
-            selezionaRiga(tr); // compila prezzo automaticamente
+function selezionaRiga(tr) {
+    document.querySelectorAll("tr.selected").forEach(r => r.classList.remove("selected"));
+    tr.classList.add("selected");
 
-            const immagini = tutteLeColorazioni.filter(c => c.prodottoid == idProdotto);
+    prodottoSelezionato = tr.dataset.id;
 
-            let html = "";
-            immagini.forEach(img => {
-                html += `<img src="${img.percorsoimmagine}">`;
-            });
+    const colonne = Object.keys(strutturaProdotto);
+    const indicePrezzo = colonne.indexOf("prezzo");
 
-            document.getElementById("popup-immagini").innerHTML = html;
-            document.getElementById("popup").style.display = "flex";
-        }
+    if (indicePrezzo !== -1) {
+        const celle = tr.querySelectorAll("td");
+        document.getElementById("campoPrezzo").value = celle[indicePrezzo].innerText;
+    }
+}
 
-        function chiudiPopup() {
-            document.getElementById("popup").style.display = "none";
-        }
+function apriPopup(idProdotto) {
+    const immagini = tutteLeColorazioni.filter(c => c.prodottoid == idProdotto);
 
-        window.onload = caricaProdotti;
-    </script>
+    let html = "";
+    immagini.forEach(img => {
+        html += `<img src="${img.percorsoimmagine}">`;
+    });
+
+    document.getElementById("popup-immagini").innerHTML = html;
+    document.getElementById("popup").style.display = "flex";
+}
+
+function chiudiPopup() {
+    document.getElementById("popup").style.display = "none";
+}
+
+window.onload = caricaProdotti;
+</script>
+
 
 </body>
 </html>
