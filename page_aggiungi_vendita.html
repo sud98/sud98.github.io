@@ -30,11 +30,13 @@
             border-collapse: collapse;
             width: 100%;
             font-size: 18px;
+            user-select: none; /* IMPORTANTE per far funzionare il doppio click */
         }
 
         th, td {
             border: 1px solid #444;
             padding: 10px 20px;
+            user-select: none; /* impedisce selezione testo */
         }
 
         th {
@@ -209,14 +211,14 @@
         }
 
         function aggiungiEventiRighe() {
-            const righe = document.querySelectorAll("table tr[data-id]");
+            const celle = document.querySelectorAll("table td");
 
-            righe.forEach(riga => {
-                riga.addEventListener("click", () => selezionaRiga(riga));
+            celle.forEach(td => {
+                td.addEventListener("click", () => selezionaRiga(td.parentElement));
 
-                riga.addEventListener("dblclick", () => {
-                    selezionaRiga(riga); // aggiorna prezzo
-                    apriPopup(riga.dataset.id);
+                td.addEventListener("dblclick", () => {
+                    selezionaRiga(td.parentElement);
+                    apriPopup(td.parentElement.dataset.id);
                 });
             });
         }
@@ -253,11 +255,11 @@
         }
 
         function annulla() {
-            window.location.href = "vendite.html"; 
+            window.location.href = "page_vendite.html";
         }
 
         function aggiungi() {
-            window.location.href = "vendite.html";
+            window.location.href = "page_vendite.html";
         }
 
         window.onload = caricaProdotti;
