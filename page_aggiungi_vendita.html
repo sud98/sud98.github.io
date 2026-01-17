@@ -1,135 +1,105 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>Aggiungi Vendita</title>
+<script>
+    const client = supabase.createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    let prodottoSelezionato = null;
 
-    <style>
-        body {
-            font-family: Arial;
-            text-align: center;
+    async function caricaProdotti() {
+        const { data: prodotti, error } =
+            await client.from("prodotti").select("*").order("id", { ascending: true });
+
+        if (error) {
+            document.getElementById("tabellaProdotti").innerHTML = "<p>Errore nel caricamento</p>";
+            return;
         }
 
-        h1 {
-            margin-top: 20px;
+        document.getElementById("tabellaProdotti").innerHTML =
+            await generaTabellaProdotti(prodotti);
+    }
+
+    async function generaTabellaProdotti(dati) {
+        if (!dati || dati.length === 0) {
+            return "<p>Nessun prodotto trovato.</p>";
         }
 
-        /* Contenitore scrollabile */
-        .scroll-box {
-            width: 90%;
-            max-height: 500px;
-            margin: 20px auto;
-            overflow-y: auto;
-            border: 2px solid #444;
-            border-radius: 8px;
-            padding: 10px;
+        // Colonne da nascondere
+        const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
+
+        const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
+
+        let html = "<table><tr>";
+
+        // intestazioni
+        for (const col of colonne) {
+            html += `<th>${col}</th>`;
         }
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 18px;
-        }
+        // nuova colonna immagini
+        html += `<th>Immagini</th>`;
 
-        th, td {
-            border: 1px solid #444;
-            padding: 10px 20px;
-        }
+        html += "</tr>";
 
-        th {
-            background-color: #eee;
-        }
-
-        img {
-            max-width: 80px;
-            border-radius: 6px;
-        }
-
-        /* Righe selezionabili */
-        tr.selected {
-            background-color: #c7e6ff !important;
-        }
-
-        tr:hover {
-            background-color: #f0f0f0;
-            cursor: pointer;
-        }
-    </style>
-</head>
-
-<body>
-
-    <h1>Seleziona un Prodotto</h1>
-
-    <div class="scroll-box">
-        <div id="tabellaProdotti"></div>
-    </div>
-
-    <script>
-        const client = supabase.createClient(
-            "https://ixarnqyrsonhshkctcki.supabase.co",
-            "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
-        );
-
-        let prodottoSelezionato = null;
-
-        async function caricaProdotti() {
-            const { data: prodotti, error } =
-                await client.from("prodotti").select("*").order("id", { ascending: true });
-
-            if (error) {
-                document.getElementById("tabellaProdotti").innerHTML = "<p>Errore nel caricamento</p>";
-                return;
-            }
-
-            document.getElementById("tabellaProdotti").innerHTML =
-                generaTabellaProdotti(prodotti);
-        }
-
-        function generaTabellaProdotti(dati) {
-            if (!dati || dati.length === 0) {
-                return "<p>Nessun prodotto trovato.</p>";
-            }
-
-            const colonne = Object.keys(dati[0]);
-            let html = "<table><tr>";
+        // righe
+        for (const riga of dati) {
+            html += `<tr data-id="${riga.id}" onclick="selezionaRiga(this)">`;
 
             for (const col of colonne) {
-                html += `<th>${col}</th>`;
+                html += `<td>${riga[col]}</td>`;
             }
+
+            // --- CARICAMENTO COLORAZIONI ---
+            const immagini = await caricaColorazioni(riga.id);
+
+            let selectHtml = `<select onchange="mostraImmagine(this)">`;
+            selectHtml += `<option value="">Seleziona</option>`;
+
+            immagini.forEach(img => {
+                selectHtml += `<option value="${img}">${img.split("/").pop()}</option>`;
+            });
+
+            selectHtml += `</select>`;
+
+            html += `<td>${selectHtml} <br><img class="anteprima" style="max-width:80px; display:none;"></td>`;
 
             html += "</tr>";
-
-            for (const riga of dati) {
-                html += `<tr data-id="${riga.id}" onclick="selezionaRiga(this)">`;
-
-                for (const col of colonne) {
-                    if (col.toLowerCase() === "immagine") {
-                        html += `<td><img src="${riga[col]}" alt="foto"></td>`;
-                    } else {
-                        html += `<td>${riga[col]}</td>`;
-                    }
-                }
-
-                html += "</tr>";
-            }
-
-            html += "</table>";
-            return html;
         }
 
-        function selezionaRiga(tr) {
-            const tutte = document.querySelectorAll("tr.selected");
-            tutte.forEach(r => r.classList.remove("selected"));
+        html += "</table>";
+        return html;
+    }
 
-            tr.classList.add("selected");
-            prodottoSelezionato = tr.getAttribute("data-id");
+    async function caricaColorazioni(prodottoId) {
+        const { data, error } = await client
+            .from("colorazioni")
+            .select("percorsoimmagine")
+            .eq("prodottoid", prodottoId);
+
+        if (error || !data) return [];
+
+        return data.map(x => x.percorsoimmagine);
+    }
+
+    function mostraImmagine(select) {
+        const img = select.parentElement.querySelector(".anteprima");
+
+        if (!select.value) {
+            img.style.display = "none";
+            return;
         }
 
-        window.onload = caricaProdotti;
-    </script>
+        img.src = select.value;
+        img.style.display = "block";
+    }
 
-</body>
-</html>
+    function selezionaRiga(tr) {
+        const tutte = document.querySelectorAll("tr.selected");
+        tutte.forEach(r => r.classList.remove("selected"));
+
+        tr.classList.add("selected");
+        prodottoSelezionato = tr.getAttribute("data-id");
+    }
+
+    window.onload = caricaProdotti;
+</script>
