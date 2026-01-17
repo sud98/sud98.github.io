@@ -74,43 +74,45 @@
     );
 
     let prodottoSelezionato = null;
+    let tutteLeColorazioni = [];
 
     async function caricaProdotti() {
-        const { data: prodotti, error } =
+        // 1) Carico prodotti
+        const { data: prodotti, error: err1 } =
             await client.from("prodotti").select("*").order("id", { ascending: true });
 
-        if (error) {
+        // 2) Carico tutte le colorazioni in un colpo solo
+        const { data: colorazioni, error: err2 } =
+            await client.from("colorazioni").select("prodottoid, percorsoimmagine");
+
+        if (err1 || err2) {
             document.getElementById("tabellaProdotti").innerHTML = "<p>Errore nel caricamento</p>";
             return;
         }
 
+        tutteLeColorazioni = colorazioni;
+
         document.getElementById("tabellaProdotti").innerHTML =
-            await generaTabellaProdotti(prodotti);
+            generaTabellaProdotti(prodotti);
     }
 
-    async function generaTabellaProdotti(dati) {
+    function generaTabellaProdotti(dati) {
         if (!dati || dati.length === 0) {
             return "<p>Nessun prodotto trovato.</p>";
         }
 
-        // Colonne da nascondere
         const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
-
         const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
 
         let html = "<table><tr>";
 
-        // intestazioni
         for (const col of colonne) {
             html += `<th>${col}</th>`;
         }
 
-        // nuova colonna immagine
         html += `<th>Immagine</th>`;
-
         html += "</tr>";
 
-        // righe
         for (const riga of dati) {
             html += `<tr data-id="${riga.id}" onclick="selezionaRiga(this)">`;
 
@@ -118,11 +120,11 @@
                 html += `<td>${riga[col]}</td>`;
             }
 
-            // --- CARICAMENTO PRIMA COLORAZIONE ---
-            const immagine = await caricaPrimaColorazione(riga.id);
+            // Trovo la prima colorazione corrispondente
+            const colore = tutteLeColorazioni.find(c => c.prodottoid === riga.id);
 
-            if (immagine) {
-                html += `<td><img src="${immagine}" alt="foto"></td>`;
+            if (colore) {
+                html += `<td><img src="${colore.percorsoimmagine}" alt="foto"></td>`;
             } else {
                 html += `<td>-</td>`;
             }
@@ -132,18 +134,6 @@
 
         html += "</table>";
         return html;
-    }
-
-    async function caricaPrimaColorazione(prodottoId) {
-        const { data, error } = await client
-            .from("colorazioni")
-            .select("percorsoimmagine")
-            .eq("prodottoid", prodottoId)
-            .limit(1);
-
-        if (error || !data || data.length === 0) return null;
-
-        return data[0].percorsoimmagine;
     }
 
     function selezionaRiga(tr) {
@@ -156,6 +146,7 @@
 
     window.onload = caricaProdotti;
 </script>
+
 
 
 </body>
