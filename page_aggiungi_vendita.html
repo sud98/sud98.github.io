@@ -90,6 +90,28 @@
             max-width: 120px;
             margin: 10px;
         }
+
+        /* Pulsanti finali */
+        .buttons {
+            margin-top: 40px;
+        }
+
+        .buttons button {
+            padding: 12px 25px;
+            font-size: 18px;
+            border-radius: 8px;
+            margin: 0 15px;
+            cursor: pointer;
+        }
+
+        .annulla {
+            background: #ccc;
+        }
+
+        .aggiungi {
+            background: #4CAF50;
+            color: white;
+        }
     </style>
 </head>
 
@@ -113,6 +135,12 @@
         <input type="text" id="campoDestinatario" placeholder="Nome cliente">
     </div>
 
+    <!-- PULSANTI FINALI -->
+    <div class="buttons">
+        <button class="annulla" onclick="annulla()">ANNULLA</button>
+        <button class="aggiungi" onclick="aggiungi()">AGGIUNGI</button>
+    </div>
+
     <!-- POPUP COLORAZIONI -->
     <div id="popup" onclick="chiudiPopup()">
         <div id="popup-content" onclick="event.stopPropagation()">
@@ -123,110 +151,117 @@
     </div>
 
     <script>
-const client = supabase.createClient(
-    "https://ixarnqyrsonhshkctcki.supabase.co",
-    "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
-);
+        const client = supabase.createClient(
+            "https://ixarnqyrsonhshkctcki.supabase.co",
+            "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+        );
 
-let prodottoSelezionato = null;
-let tutteLeColorazioni = [];
-let strutturaProdotto = null;
+        let prodottoSelezionato = null;
+        let tutteLeColorazioni = [];
+        let strutturaProdotto = null;
 
-async function caricaProdotti() {
-    const { data: prodotti } =
-        await client.from("prodotti").select("*").order("id", { ascending: true });
+        async function caricaProdotti() {
+            const { data: prodotti } =
+                await client.from("prodotti").select("*").order("id", { ascending: true });
 
-    const { data: colorazioni } =
-        await client.from("colorazioni").select("prodottoid, percorsoimmagine");
+            const { data: colorazioni } =
+                await client.from("colorazioni").select("prodottoid, percorsoimmagine");
 
-    tutteLeColorazioni = colorazioni;
-    strutturaProdotto = prodotti[0];
+            tutteLeColorazioni = colorazioni;
+            strutturaProdotto = prodotti[0];
 
-    document.getElementById("tabellaProdotti").innerHTML =
-        generaTabellaProdotti(prodotti);
+            document.getElementById("tabellaProdotti").innerHTML =
+                generaTabellaProdotti(prodotti);
 
-    // DATA CORRETTA (locale)
-    const oggi = new Date();
-    oggi.setMinutes(oggi.getMinutes() - oggi.getTimezoneOffset());
-    document.getElementById("campoData").value = oggi.toISOString().split("T")[0];
+            // DATA CORRETTA (locale)
+            const oggi = new Date();
+            oggi.setMinutes(oggi.getMinutes() - oggi.getTimezoneOffset());
+            document.getElementById("campoData").value = oggi.toISOString().split("T")[0];
 
-    // AGGIUNGO EVENTI CLICK E DOPPIO CLICK
-    aggiungiEventiRighe();
-}
+            // AGGIUNGO EVENTI CLICK E DOPPIO CLICK
+            aggiungiEventiRighe();
+        }
 
-function generaTabellaProdotti(dati) {
-    const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
-    const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
+        function generaTabellaProdotti(dati) {
+            const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
+            const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
 
-    let html = "<table><tr>";
+            let html = "<table><tr>";
 
-    for (const col of colonne) html += `<th>${col}</th>`;
-    html += `<th>Immagine</th></tr>`;
+            for (const col of colonne) html += `<th>${col}</th>`;
+            html += `<th>Immagine</th></tr>`;
 
-    for (const riga of dati) {
-        html += `<tr data-id="${riga.id}">`;
+            for (const riga of dati) {
+                html += `<tr data-id="${riga.id}">`;
 
-        for (const col of colonne) html += `<td>${riga[col]}</td>`;
+                for (const col of colonne) html += `<td>${riga[col]}</td>`;
 
-        const colore = tutteLeColorazioni.find(c => c.prodottoid === riga.id);
-        html += colore
-            ? `<td><img src="${colore.percorsoimmagine}"></td>`
-            : `<td>-</td>`;
+                const colore = tutteLeColorazioni.find(c => c.prodottoid === riga.id);
+                html += colore
+                    ? `<td><img src="${colore.percorsoimmagine}"></td>`
+                    : `<td>-</td>`;
 
-        html += "</tr>";
-    }
+                html += "</tr>";
+            }
 
-    html += "</table>";
-    return html;
-}
+            html += "</table>";
+            return html;
+        }
 
-function aggiungiEventiRighe() {
-    const righe = document.querySelectorAll("table tr[data-id]");
+        function aggiungiEventiRighe() {
+            const righe = document.querySelectorAll("table tr[data-id]");
 
-    righe.forEach(riga => {
-        //riga.addEventListener("click", () => selezionaRiga(riga));
+            righe.forEach(riga => {
+                riga.addEventListener("click", () => selezionaRiga(riga));
 
-        riga.addEventListener("dblclick", () => {
-            selezionaRiga(riga); // aggiorna prezzo
-            apriPopup(riga.dataset.id);
-        });
-    });
-}
+                riga.addEventListener("dblclick", () => {
+                    selezionaRiga(riga); // aggiorna prezzo
+                    apriPopup(riga.dataset.id);
+                });
+            });
+        }
 
-function selezionaRiga(tr) {
-    document.querySelectorAll("tr.selected").forEach(r => r.classList.remove("selected"));
-    tr.classList.add("selected");
+        function selezionaRiga(tr) {
+            document.querySelectorAll("tr.selected").forEach(r => r.classList.remove("selected"));
+            tr.classList.add("selected");
 
-    prodottoSelezionato = tr.dataset.id;
+            prodottoSelezionato = tr.dataset.id;
 
-    const colonne = Object.keys(strutturaProdotto);
-    const indicePrezzo = colonne.indexOf("prezzo");
+            const colonne = Object.keys(strutturaProdotto);
+            const indicePrezzo = colonne.indexOf("prezzo");
 
-    if (indicePrezzo !== -1) {
-        const celle = tr.querySelectorAll("td");
-        document.getElementById("campoPrezzo").value = celle[indicePrezzo].innerText;
-    }
-}
+            if (indicePrezzo !== -1) {
+                const celle = tr.querySelectorAll("td");
+                document.getElementById("campoPrezzo").value = celle[indicePrezzo].innerText;
+            }
+        }
 
-function apriPopup(idProdotto) {
-    const immagini = tutteLeColorazioni.filter(c => c.prodottoid == idProdotto);
+        function apriPopup(idProdotto) {
+            const immagini = tutteLeColorazioni.filter(c => c.prodottoid == idProdotto);
 
-    let html = "";
-    immagini.forEach(img => {
-        html += `<img src="${img.percorsoimmagine}">`;
-    });
+            let html = "";
+            immagini.forEach(img => {
+                html += `<img src="${img.percorsoimmagine}">`;
+            });
 
-    document.getElementById("popup-immagini").innerHTML = html;
-    document.getElementById("popup").style.display = "flex";
-}
+            document.getElementById("popup-immagini").innerHTML = html;
+            document.getElementById("popup").style.display = "flex";
+        }
 
-function chiudiPopup() {
-    document.getElementById("popup").style.display = "none";
-}
+        function chiudiPopup() {
+            document.getElementById("popup").style.display = "none";
+        }
 
-window.onload = caricaProdotti;
-</script>
+        function annulla() {
+            window.location.href = "vendite.html"; 
+        }
 
+        function aggiungi() {
+            window.location.href = "vendite.html";
+        }
+
+        window.onload = caricaProdotti;
+    </script>
 
 </body>
 </html>
