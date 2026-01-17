@@ -16,7 +16,6 @@
             margin-top: 20px;
         }
 
-        /* Contenitore scrollabile */
         .scroll-box {
             width: 90%;
             max-height: 500px;
@@ -47,7 +46,6 @@
             border-radius: 6px;
         }
 
-        /* Righe selezionabili */
         tr.selected {
             background-color: #c7e6ff !important;
         }
@@ -55,6 +53,17 @@
         tr:hover {
             background-color: #f0f0f0;
             cursor: pointer;
+        }
+
+        .form-box {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .form-box input {
+            margin: 5px;
+            padding: 6px;
+            font-size: 18px;
         }
     </style>
 </head>
@@ -67,89 +76,113 @@
         <div id="tabellaProdotti"></div>
     </div>
 
+    <!-- CAMPi DI INSERIMENTO -->
+    <div class="form-box">
+        <label>Prezzo: </label>
+        <input type="number" id="campoPrezzo" step="0.01"><br>
+
+        <label>Data: </label>
+        <input type="date" id="campoData"><br>
+
+        <label>Destinatario: </label>
+        <input type="text" id="campoDestinatario" placeholder="Nome cliente">
+    </div>
+
     <script>
-    const client = supabase.createClient(
-        "https://ixarnqyrsonhshkctcki.supabase.co",
-        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
-    );
+        const client = supabase.createClient(
+            "https://ixarnqyrsonhshkctcki.supabase.co",
+            "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+        );
 
-    let prodottoSelezionato = null;
-    let tutteLeColorazioni = [];
+        let prodottoSelezionato = null;
+        let tutteLeColorazioni = [];
+        let strutturaProdotto = null;
 
-    async function caricaProdotti() {
-        // 1) Carico prodotti
-        const { data: prodotti, error: err1 } =
-            await client.from("prodotti").select("*").order("id", { ascending: true });
+        async function caricaProdotti() {
+            // Carico prodotti
+            const { data: prodotti, error: err1 } =
+                await client.from("prodotti").select("*").order("id", { ascending: true });
 
-        // 2) Carico tutte le colorazioni in un colpo solo
-        const { data: colorazioni, error: err2 } =
-            await client.from("colorazioni").select("prodottoid, percorsoimmagine");
+            // Carico tutte le colorazioni
+            const { data: colorazioni, error: err2 } =
+                await client.from("colorazioni").select("prodottoid, percorsoimmagine");
 
-        if (err1 || err2) {
-            document.getElementById("tabellaProdotti").innerHTML = "<p>Errore nel caricamento</p>";
-            return;
+            if (err1 || err2) {
+                document.getElementById("tabellaProdotti").innerHTML = "<p>Errore nel caricamento</p>";
+                return;
+            }
+
+            tutteLeColorazioni = colorazioni;
+            strutturaProdotto = prodotti[0];
+
+            document.getElementById("tabellaProdotti").innerHTML =
+                generaTabellaProdotti(prodotti);
+
+            // Imposta data odierna
+            document.getElementById("campoData").value =
+                new Date().toISOString().split("T")[0];
         }
 
-        tutteLeColorazioni = colorazioni;
+        function generaTabellaProdotti(dati) {
+            if (!dati || dati.length === 0) {
+                return "<p>Nessun prodotto trovato.</p>";
+            }
 
-        document.getElementById("tabellaProdotti").innerHTML =
-            generaTabellaProdotti(prodotti);
-    }
+            const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
+            const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
 
-    function generaTabellaProdotti(dati) {
-        if (!dati || dati.length === 0) {
-            return "<p>Nessun prodotto trovato.</p>";
-        }
-
-        const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
-        const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
-
-        let html = "<table><tr>";
-
-        for (const col of colonne) {
-            html += `<th>${col}</th>`;
-        }
-
-        html += `<th>Immagine</th>`;
-        html += "</tr>";
-
-        for (const riga of dati) {
-            html += `<tr data-id="${riga.id}" onclick="selezionaRiga(this)">`;
+            let html = "<table><tr>";
 
             for (const col of colonne) {
-                html += `<td>${riga[col]}</td>`;
+                html += `<th>${col}</th>`;
             }
 
-            // Trovo la prima colorazione corrispondente
-            const colore = tutteLeColorazioni.find(c => c.prodottoid === riga.id);
-
-            if (colore) {
-                html += `<td><img src="${colore.percorsoimmagine}" alt="foto"></td>`;
-            } else {
-                html += `<td>-</td>`;
-            }
-
+            html += `<th>Immagine</th>`;
             html += "</tr>";
+
+            for (const riga of dati) {
+                html += `<tr data-id="${riga.id}" onclick="selezionaRiga(this)">`;
+
+                for (const col of colonne) {
+                    html += `<td>${riga[col]}</td>`;
+                }
+
+                // Trovo la prima colorazione
+                const colore = tutteLeColorazioni.find(c => c.prodottoid === riga.id);
+
+                if (colore) {
+                    html += `<td><img src="${colore.percorsoimmagine}" alt="foto"></td>`;
+                } else {
+                    html += `<td>-</td>`;
+                }
+
+                html += "</tr>";
+            }
+
+            html += "</table>";
+            return html;
         }
 
-        html += "</table>";
-        return html;
-    }
+        function selezionaRiga(tr) {
+            const tutte = document.querySelectorAll("tr.selected");
+            tutte.forEach(r => r.classList.remove("selected"));
 
-    function selezionaRiga(tr) {
-        const tutte = document.querySelectorAll("tr.selected");
-        tutte.forEach(r => r.classList.remove("selected"));
+            tr.classList.add("selected");
+            prodottoSelezionato = tr.getAttribute("data-id");
 
-        tr.classList.add("selected");
-        prodottoSelezionato = tr.getAttribute("data-id");
-    }
+            // Trovo indice della colonna prezzo
+            const colonne = Object.keys(strutturaProdotto);
+            const indicePrezzo = colonne.indexOf("prezzo");
 
-    window.onload = caricaProdotti;
-</script>
+            if (indicePrezzo !== -1) {
+                const celle = tr.querySelectorAll("td");
+                const prezzo = celle[indicePrezzo].innerText;
+                document.getElementById("campoPrezzo").value = prezzo;
+            }
+        }
 
-
+        window.onload = caricaProdotti;
+    </script>
 
 </body>
 </html>
-
-
