@@ -105,8 +105,8 @@
             html += `<th>${col}</th>`;
         }
 
-        // nuova colonna immagini
-        html += `<th>Immagini</th>`;
+        // nuova colonna immagine
+        html += `<th>Immagine</th>`;
 
         html += "</tr>";
 
@@ -118,19 +118,14 @@
                 html += `<td>${riga[col]}</td>`;
             }
 
-            // --- CARICAMENTO COLORAZIONI ---
-            const immagini = await caricaColorazioni(riga.id);
+            // --- CARICAMENTO PRIMA COLORAZIONE ---
+            const immagine = await caricaPrimaColorazione(riga.id);
 
-            let selectHtml = `<select onchange="mostraImmagine(this)">`;
-            selectHtml += `<option value="">Seleziona</option>`;
-
-            immagini.forEach(img => {
-                selectHtml += `<option value="${img}">${img.split("/").pop()}</option>`;
-            });
-
-            selectHtml += `</select>`;
-
-            html += `<td>${selectHtml} <br><img class="anteprima" style="max-width:80px; display:none;"></td>`;
+            if (immagine) {
+                html += `<td><img src="${immagine}" alt="foto"></td>`;
+            } else {
+                html += `<td>-</td>`;
+            }
 
             html += "</tr>";
         }
@@ -139,27 +134,16 @@
         return html;
     }
 
-    async function caricaColorazioni(prodottoId) {
+    async function caricaPrimaColorazione(prodottoId) {
         const { data, error } = await client
             .from("colorazioni")
             .select("percorsoimmagine")
-            .eq("prodottoid", prodottoId);
+            .eq("prodottoid", prodottoId)
+            .limit(1);
 
-        if (error || !data) return [];
+        if (error || !data || data.length === 0) return null;
 
-        return data.map(x => x.percorsoimmagine);
-    }
-
-    function mostraImmagine(select) {
-        const img = select.parentElement.querySelector(".anteprima");
-
-        if (!select.value) {
-            img.style.display = "none";
-            return;
-        }
-
-        img.src = select.value;
-        img.style.display = "block";
+        return data[0].percorsoimmagine;
     }
 
     function selezionaRiga(tr) {
@@ -172,6 +156,7 @@
 
     window.onload = caricaProdotti;
 </script>
+
 
 </body>
 </html>
