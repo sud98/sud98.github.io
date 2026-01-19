@@ -30,7 +30,6 @@
             border-collapse: collapse;
             width: 100%;
             font-size: 18px;
-            user-select: none;
         }
 
         th, td {
@@ -42,44 +41,59 @@
             background-color: #eee;
         }
 
-        img {
-            max-width: 80px;
-            border-radius: 6px;
-        }
-
-        .form-box {
-            margin-top: 30px;
-            text-align: center;
-        }
-
-        .form-box input {
-            margin: 5px;
-            padding: 6px;
-            font-size: 18px;
-        }
-
-        .buttons {
-            margin-top: 40px;
-        }
-
-        .buttons button {
-            padding: 12px 25px;
-            font-size: 18px;
-            border-radius: 8px;
-            margin: 0 15px;
+        /* SELECT VISUALE */
+        .color-select {
+            position: relative;
+            width: 180px;
             cursor: pointer;
         }
 
-        .annulla {
-            background: #ccc;
+        .color-select-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #444;
+            padding: 5px;
+            border-radius: 6px;
+            background: white;
         }
 
-        .aggiungi {
-            background: #4CAF50;
-            color: white;
+        .color-select-display img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
         }
 
-        /* Carrello */
+        .color-select-options {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 220px;
+            background: white;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            display: none;
+            flex-wrap: wrap;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .color-select-options img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .color-select-options img:hover {
+            border-color: #4CAF50;
+        }
+
+        /* CARRELLO */
         #carrelloContainer table {
             margin-top: 20px;
         }
@@ -101,22 +115,6 @@
 
     <h2>Carrello</h2>
     <div id="carrelloContainer"><p>Carrello vuoto</p></div>
-
-    <div class="form-box">
-        <label>Prezzo: </label>
-        <input type="number" id="campoPrezzo" step="0.01"><br>
-
-        <label>Data: </label>
-        <input type="date" id="campoData"><br>
-
-        <label>Destinatario: </label>
-        <input type="text" id="campoDestinatario" placeholder="Nome cliente">
-    </div>
-
-    <div class="buttons">
-        <button class="annulla" onclick="annulla()">ANNULLA</button>
-        <button class="aggiungi" onclick="aggiungi()">AGGIUNGI</button>
-    </div>
 
     <script>
         const client = supabase.createClient(
@@ -140,88 +138,95 @@
 
             document.getElementById("tabellaProdotti").innerHTML =
                 generaTabellaProdotti(prodotti);
-
-            const oggi = new Date();
-            oggi.setMinutes(oggi.getMinutes() - oggi.getTimezoneOffset());
-            document.getElementById("campoData").value = oggi.toISOString().split("T")[0];
         }
 
-        function generaTabellaProdotti(dati) 
-        {
-                const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
-                const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
-            
-                let html = "<table><tr>";
-            
-                for (const col of colonne) html += `<th>${col}</th>`;
-                html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
-            
-                        for (const riga of dati) 
-                        {
-                            html += `<tr data-id="${riga.id}">`;
-                    
-                            for (const col of colonne) html += `<td>${riga[col]}</td>`;
-                    
-                            const colori = tutteLeColorazioni.filter(c => c.prodottoid === riga.id);
-                    
-                            // PREVIEW + SELECT
-                            let select = `
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <img id="preview-${riga.id}" src="${colori[0]?.percorsoimmagine || ''}" style="width:60px; border-radius:6px;">
-                                    <select class="select-colore" data-id="${riga.id}" onchange="cambiaPreview(${riga.id})">
-                            `;
-                    
-                            colori.forEach(c => {
-                                const nome = c.percorsoimmagine.split("/").pop();
-                                select += `<option value="${c.percorsoimmagine}">${nome}</option>`;
-                            });
-                    
-                            select += `</select></div>`;
-                    
-                            html += `<td>${select}</td>`;
-                            html += `<td><button onclick="aggiungiAlCarrello(${riga.id})">+</button></td>`;
-                            html += "</tr>";
-                        }
-            
-                html += "</table>";
-                return html;
+        function generaTabellaProdotti(dati) {
+            const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
+            const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
+
+            let html = "<table><tr>";
+
+            for (const col of colonne) html += `<th>${col}</th>`;
+            html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
+
+            for (const riga of dati) {
+                html += `<tr data-id="${riga.id}">`;
+
+                for (const col of colonne) html += `<td>${riga[col]}</td>`;
+
+                const colori = tutteLeColorazioni.filter(c => c.prodottoid === riga.id);
+
+                let select = `
+                    <div class="color-select" data-id="${riga.id}">
+                        <div class="color-select-display" onclick="toggleColorMenu(${riga.id})">
+                            <img id="color-preview-${riga.id}" src="${colori[0]?.percorsoimmagine}">
+                            <span>${colori[0]?.percorsoimmagine.split("/").pop()}</span>
+                        </div>
+
+                        <div class="color-select-options" id="color-options-${riga.id}">
+                `;
+
+                colori.forEach(c => {
+                    select += `
+                        <img src="${c.percorsoimmagine}" 
+                             onclick="selezionaColorazione(${riga.id}, '${c.percorsoimmagine}')">
+                    `;
+                });
+
+                select += `
+                        </div>
+                    </div>
+                `;
+
+                html += `<td>${select}</td>`;
+                html += `<td><button onclick="aggiungiAlCarrello(${riga.id})">+</button></td>`;
+                html += "</tr>";
+            }
+
+            html += "</table>";
+            return html;
         }
 
-        function cambiaPreview(idProdotto) 
-        { 
-            const select = document.querySelector(`select[data-id="${idProdotto}"]`); 
-            const img = document.getElementById(`preview-${idProdotto}`); 
-            img.src = select.value; 
-        }
-        
-        function aggiungiAlCarrello(idProdotto) 
-        {
-                const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
-                const celle = riga.querySelectorAll("td");
-            
-                const nome = celle[1].innerText; // seconda colonna = nome
-                const prezzo = parseFloat(celle[2].innerText); // terza colonna = prezzo
-            
-                const select = document.querySelector(`select[data-id="${idProdotto}"]`);
-                const colorazione = select.value;
-            
-                const esistente = carrello.find(x => x.id === idProdotto && x.colorazione === colorazione);
-            
-                if (esistente) {
-                    esistente.quantita++;
-                } else {
-                    carrello.push({
-                        id: idProdotto,
-                        nome,
-                        colorazione,
-                        prezzo,
-                        quantita: 1
-                    });
-                }
-            
-                aggiornaCarrello();
+        function toggleColorMenu(id) {
+            const menu = document.getElementById(`color-options-${id}`);
+            menu.style.display = menu.style.display === "flex" ? "none" : "flex";
         }
 
+        function selezionaColorazione(id, imgPath) {
+            document.getElementById(`color-preview-${id}`).src = imgPath;
+
+            const display = document.querySelector(`.color-select[data-id="${id}"] span`);
+            display.innerText = imgPath.split("/").pop();
+
+            document.getElementById(`color-options-${id}`).style.display = "none";
+        }
+
+        function aggiungiAlCarrello(idProdotto) {
+            const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
+            const celle = riga.querySelectorAll("td");
+
+            const nome = celle[1].innerText;
+            const prezzo = parseFloat(celle[2].innerText);
+
+            const preview = document.getElementById(`color-preview-${idProdotto}`);
+            const colorazione = preview.src;
+
+            const esistente = carrello.find(x => x.id === idProdotto && x.colorazione === colorazione);
+
+            if (esistente) {
+                esistente.quantita++;
+            } else {
+                carrello.push({
+                    id: idProdotto,
+                    nome,
+                    colorazione,
+                    prezzo,
+                    quantita: 1
+                });
+            }
+
+            aggiornaCarrello();
+        }
 
         function aggiornaCarrello() {
             if (carrello.length === 0) {
@@ -235,7 +240,7 @@
                 html += `
                     <tr>
                         <td>${item.nome}</td>
-                        <td>${item.colorazione}</td>
+                        <td><img src="${item.colorazione}" style="width:60px;border-radius:6px;"></td>
                         <td>${item.prezzo.toFixed(2)}</td>
                         <td>
                             <input type="number" min="1" value="${item.quantita}" 
@@ -260,14 +265,6 @@
         function rimuoviDalCarrello(index) {
             carrello.splice(index, 1);
             aggiornaCarrello();
-        }
-
-        function annulla() {
-            window.location.href = "page_vendite.html";
-        }
-
-        function aggiungi() {
-            window.location.href = "page_vendite.html";
         }
 
         window.onload = caricaProdotti;
