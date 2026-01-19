@@ -1,40 +1,70 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <!-- Codifica caratteri: supporta lettere accentate e simboli -->
     <meta charset="utf-8" />
-
     <!-- Titolo della pagina (scheda del browser) -->
     <title>Aggiungi Vendita</title>
-
     <!-- Libreria ufficiale Supabase (necessaria per il database) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <!-- Stili grafici della pagina -->
     <style>
-
-        /* Impostazioni generali */
+        /* Layout verticale a sezioni proporzionali */
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;            /* usa tutta l’altezza dello schermo */
+            display: flex;
+            flex-direction: column;   /* impila le sezioni verticalmente */
         }
 
-        h1 {
-            margin-top: 20px;
+        /* Ogni sezione avrà un’altezza proporzionale */
+        .section-title {
+            flex: 0 0 5%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Contenitore scrollabile della tabella prodotti */
+        .section-prodotti {
+            flex: 0 0 45%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-carrello-title {
+            flex: 0 0 5%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-carrello {
+            flex: 0 0 40%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-bottoni {
+            flex: 0 0 5%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* Mantieni la tua scroll-box ma adattata */
         .scroll-box {
-            width: 90%;
-            max-height: 500px;
-            margin: 20px auto;
+            flex: 1;
+            width: 95%;
+            margin: auto;
             overflow-y: auto;
             border: 2px solid #444;
             border-radius: 8px;
             padding: 10px;
-            position: relative; /* aggiungi questo */ 
-            z-index: 1;
         }
 
         /* Tabella prodotti */
@@ -44,30 +74,23 @@
             font-size: 18px;
             position: relative;
         }
-
-
         tr {
             position: relative;
             z-index: 1;
         }
-
         tr.row-open {
             z-index: 10;  /* la riga con il menu aperto sta sopra alle altre */
         }
-
         th, td {
             border: 1px solid #444;
             padding: 10px 20px;
         }
-
         td {
             position: relative;
         }
-
         th {
             background-color: #eee;
         }
-
         /* Selettore visuale delle colorazioni */
         .color-select {
             width: 120px;
@@ -76,7 +99,6 @@
             position: relative; 
             z-index: 100;
         }
-
         /* Box che mostra l’immagine selezionata */
         .color-select-display {
             width: 100%; 
@@ -87,14 +109,12 @@
             border-radius: 6px;
             background: white;
         }
-
         .color-select-display img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             border-radius: 6px;
         }
-
         /* Menu a tendina delle colorazioni */
         .color-select-options { 
             position: absolute; 
@@ -110,8 +130,6 @@
             z-index: 1000; /* sopra le altre righe */ 
             pointer-events: none; 
         }
-
-
         /* Immagini nel menu a tendina */
         .color-select-options img {
             width: 100%;
@@ -121,22 +139,18 @@
             cursor: pointer;
             border: 2px solid transparent;
         }
-
         .color-select-options img:hover {
             border-color: #4CAF50;
         }
-
         /* Tabella del carrello */
         #carrelloContainer table {
             margin-top: 20px;
             max-height: 300px;
         }
-
         #carrelloContainer input {
             width: 60px;
             font-size: 16px;
         }
-
         /* Pulsante + */
         .btn-add {
             width: 40px;
@@ -147,65 +161,64 @@
             /*position: relative;
             z-index: 10000;  */
         }
-
     </style>
 </head>
 
-
-
 <body>
-
-    <h1>Seleziona un Prodotto</h1>
-
-    <div class="scroll-box">
-        <div id="tabellaProdotti"></div>
+    <div class="section-title">
+        <h1>Seleziona un Prodotto</h1>
     </div>
 
-    <h2>Carrello</h2>
-    <div class="scroll-box" id="carrelloContainer">
-        <p>Carrello vuoto</p>
+    <div class="section-prodotti">
+        <div class="scroll-box">
+            <div id="tabellaProdotti"></div>
+        </div>
     </div>
 
+    <div class="section-carrello-title">
+        <h2>Carrello</h2>
+    </div>
+
+    <div class="section-carrello">
+        <div class="scroll-box" id="carrelloContainer">
+            <p>Carrello vuoto</p>
+        </div>
+    </div>
+
+    <div class="section-bottoni">
+        <button>Conferma</button>
+        <button>Annulla</button>
+    </div>
 
     <script>
         const client = supabase.createClient(
             "https://ixarnqyrsonhshkctcki.supabase.co",
             "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
         );
-
         let tutteLeColorazioni = [];
         let strutturaProdotto = null;
         let carrello = [];
-
         async function caricaProdotti() {
             const { data: prodotti } =
                 await client.from("prodotti").select("*").order("id", { ascending: true });
 
             const { data: colorazioni } =
                 await client.from("colorazioni").select("id, prodottoid, percorsoimmagine");
-
-
             tutteLeColorazioni = colorazioni;
             strutturaProdotto = prodotti[0];
-
             document.getElementById("tabellaProdotti").innerHTML =
                 generaTabellaProdotti(prodotti);
         }
 
         function generaTabellaProdotti(dati) {
-            const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
+            const colonneDaSaltare = ["id","sigla_prodotto", "sigla_tipologia", "sigla_tema","descrizione"];
             const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
-
             let html = "<table><tr>";
-
             for (const col of colonne) html += `<th>${col}</th>`;
             html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
-
                 for (const riga of dati) {
                     html += `<tr data-id="${riga.id}">`;
-
                     for (const col of colonne) html += `<td>${riga[col]}</td>`;
-
                     const colori = tutteLeColorazioni.filter(c => c.prodottoid === riga.id);
                     let select = `
                         <div class="color-select" data-id="${riga.id}">
@@ -214,13 +227,9 @@
                                     src="${colori[0]?.percorsoimmagine}" 
                                     data-idcolorazione="${colori[0]?.id}"
                                     onclick="toggleColorMenu('${riga.id}')">
-
                             </div>
-
-
                             <div class="color-select-options" id="color-options-${riga.id}">
                     `;
-
                     colori.forEach(c => {
                         select += `
                             <img 
@@ -231,19 +240,15 @@
                         `;
                         console.log("GeneraTabella: ", c.id);
                     });
-
-
                     select += `
                             </div>
                         </div>
                     `;
-
                     html += `<td>${select}</td>`;
                     /*html += `<td><button onclick="aggiungiAlCarrello(${riga.id})">+</button></td>`;*/
                     html += `<td><button class="btn-add" onclick="aggiungiAlCarrello('${riga.id}')">+</button></td>`;
                     html += "</tr>";
                 }
-
             html += "</table>";
             return html;
         }
@@ -267,30 +272,23 @@
             }
         }
 
-
-
         function selezionaColorazione(idProdotto, imgPath, idColorazione) {
             console.log("Hai premuto il pulsante con:", idProdotto);
             console.log("Hai premuto il pulsante con:", imgPath);
             console.log("Hai premuto il pulsante con:", idColorazione);
             const preview = document.getElementById(`color-preview-${idProdotto}`);
-
             // aggiorna immagine
             preview.src = imgPath;
-
             // 🔥 salva l'id della colorazione selezionata
             preview.dataset.idcolorazione = idColorazione;
-
             // 🔥 salva anche sulla riga (più robusto)
             const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
             riga.dataset.colorazioneSelezionata = idColorazione;
-
             // chiudi menu
             const menu = document.getElementById(`color-options-${idProdotto}`);
             menu.style.display = "none";
             menu.style.pointerEvents = "none";
         }
-
 
         function aggiungiAlCarrello(idProdotto) {
             let html = `
@@ -303,24 +301,18 @@
                         <th></th>
                     </tr>
             `;
-
             const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
             const celle = riga.querySelectorAll("td");
-
             const nome = celle[1].innerText;
             const prezzo = parseFloat(celle[5].innerText);
-
             const preview = document.getElementById(`color-preview-${idProdotto}`);
             const colorazione = preview.src;
             const idColorazione = preview.dataset.idcolorazione;
-
             if (!idColorazione) {
                 alert("Seleziona una colorazione prima di aggiungere al carrello.");
                 return;
             }
-
             const esistente = carrello.find(x => x.id === idProdotto && x.idColorazione === idColorazione);
-
             if (esistente) {
                 esistente.quantita++;
             } else {
@@ -333,10 +325,8 @@
                     quantita: 1
                 });
             }
-
             aggiornaCarrello();
         }
-
 
         function aggiornaCarrello() {
             if (carrello.length === 0) {
