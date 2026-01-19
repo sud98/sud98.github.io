@@ -30,6 +30,7 @@
             border-collapse: collapse;
             width: 100%;
             font-size: 18px;
+            position: relative;
         }
 
         th, td {
@@ -44,31 +45,31 @@
         /* SELECT VISUALE CON IMMAGINI */
         .color-select {
             position: relative;
-            width: 70px;
+            width: 100px;
             cursor: pointer;
             user-select: none;
-            z-index: 10;
+            z-index: 50;
         }
 
         .color-select-display {
             border: 1px solid #444;
-            padding: 3px;
+            padding: 5px;
             border-radius: 6px;
             background: white;
         }
 
         .color-select-display img {
-            width: 60px;
-            height: 60px;
+            width: 90px;
+            height: 90px;
             object-fit: cover;
             border-radius: 6px;
         }
 
         .color-select-options {
             position: absolute;
-            top: 70px;
+            top: 100px;
             left: 0;
-            width: 220px;
+            width: 260px;
             background: white;
             border: 1px solid #444;
             border-radius: 6px;
@@ -76,12 +77,13 @@
             display: none;
             flex-wrap: wrap;
             gap: 10px;
-            z-index: 9999;
+            z-index: 99999;
+            pointer-events: auto;
         }
 
         .color-select-options img {
-            width: 70px;
-            height: 70px;
+            width: 110px;
+            height: 110px;
             object-fit: cover;
             border-radius: 6px;
             cursor: pointer;
