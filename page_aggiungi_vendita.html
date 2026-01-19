@@ -30,13 +30,12 @@
             border-collapse: collapse;
             width: 100%;
             font-size: 18px;
-            user-select: none; /* IMPORTANTE per far funzionare il doppio click */
+            user-select: none;
         }
 
         th, td {
             border: 1px solid #444;
             padding: 10px 20px;
-            user-select: none; /* impedisce selezione testo */
         }
 
         th {
@@ -46,15 +45,6 @@
         img {
             max-width: 80px;
             border-radius: 6px;
-        }
-
-        tr.selected {
-            background-color: #c7e6ff !important;
-        }
-
-        tr:hover {
-            background-color: #f0f0f0;
-            cursor: pointer;
         }
 
         .form-box {
@@ -68,32 +58,6 @@
             font-size: 18px;
         }
 
-        /* POPUP */
-        #popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #popup-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 600px;
-        }
-
-        #popup img {
-            max-width: 120px;
-            margin: 10px;
-        }
-
-        /* Pulsanti finali */
         .buttons {
             margin-top: 40px;
         }
@@ -114,6 +78,16 @@
             background: #4CAF50;
             color: white;
         }
+
+        /* Carrello */
+        #carrelloContainer table {
+            margin-top: 20px;
+        }
+
+        #carrelloContainer input {
+            width: 60px;
+            font-size: 16px;
+        }
     </style>
 </head>
 
@@ -125,7 +99,9 @@
         <div id="tabellaProdotti"></div>
     </div>
 
-    <!-- CAMPi DI INSERIMENTO -->
+    <h2>Carrello</h2>
+    <div id="carrelloContainer"><p>Carrello vuoto</p></div>
+
     <div class="form-box">
         <label>Prezzo: </label>
         <input type="number" id="campoPrezzo" step="0.01"><br>
@@ -137,19 +113,9 @@
         <input type="text" id="campoDestinatario" placeholder="Nome cliente">
     </div>
 
-    <!-- PULSANTI FINALI -->
     <div class="buttons">
         <button class="annulla" onclick="annulla()">ANNULLA</button>
         <button class="aggiungi" onclick="aggiungi()">AGGIUNGI</button>
-    </div>
-
-    <!-- POPUP COLORAZIONI -->
-    <div id="popup" onclick="chiudiPopup()">
-        <div id="popup-content" onclick="event.stopPropagation()">
-            <h2>Colorazioni disponibili</h2>
-            <div id="popup-immagini"></div>
-            <button onclick="chiudiPopup()">Chiudi</button>
-        </div>
     </div>
 
     <script>
@@ -158,9 +124,9 @@
             "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
         );
 
-        let prodottoSelezionato = null;
         let tutteLeColorazioni = [];
         let strutturaProdotto = null;
+        let carrello = [];
 
         async function caricaProdotti() {
             const { data: prodotti } =
@@ -175,13 +141,9 @@
             document.getElementById("tabellaProdotti").innerHTML =
                 generaTabellaProdotti(prodotti);
 
-            // DATA CORRETTA (locale)
             const oggi = new Date();
             oggi.setMinutes(oggi.getMinutes() - oggi.getTimezoneOffset());
             document.getElementById("campoData").value = oggi.toISOString().split("T")[0];
-
-            // AGGIUNGO EVENTI CLICK E DOPPIO CLICK
-            aggiungiEventiRighe();
         }
 
         function generaTabellaProdotti(dati) {
@@ -191,18 +153,22 @@
             let html = "<table><tr>";
 
             for (const col of colonne) html += `<th>${col}</th>`;
-            html += `<th>Immagine</th></tr>`;
+            html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
 
             for (const riga of dati) {
                 html += `<tr data-id="${riga.id}">`;
 
                 for (const col of colonne) html += `<td>${riga[col]}</td>`;
 
-                const colore = tutteLeColorazioni.find(c => c.prodottoid === riga.id);
-                html += colore
-                    ? `<td><img src="${colore.percorsoimmagine}"></td>`
-                    : `<td>-</td>`;
+                const colori = tutteLeColorazioni.filter(c => c.prodottoid === riga.id);
+                let select = `<select class="select-colore" data-id="${riga.id}">`;
+                colori.forEach(c => {
+                    select += `<option value="${c.percorsoimmagine}">${c.percorsoimmagine.split("/").pop()}</option>`;
+                });
+                select += `</select>`;
 
+                html += `<td>${select}</td>`;
+                html += `<td><button onclick="aggiungiAlCarrello(${riga.id})">+</button></td>`;
                 html += "</tr>";
             }
 
@@ -210,48 +176,70 @@
             return html;
         }
 
-        function aggiungiEventiRighe() {
-            const celle = document.querySelectorAll("table td");
+        function aggiungiAlCarrello(idProdotto) {
+            const select = document.querySelector(`select[data-id="${idProdotto}"]`);
+            const colorazione = select.value;
 
-            celle.forEach(td => {
-                td.addEventListener("click", () => selezionaRiga(td.parentElement));
+            const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
+            const celle = riga.querySelectorAll("td");
 
-                td.addEventListener("dblclick", () => {
-                    selezionaRiga(td.parentElement);
-                    apriPopup(td.parentElement.dataset.id);
+            const prezzo = parseFloat(celle[Object.keys(strutturaProdotto).indexOf("prezzo")].innerText);
+            const nome = celle[1].innerText;
+
+            const esistente = carrello.find(x => x.id === idProdotto && x.colorazione === colorazione);
+
+            if (esistente) {
+                esistente.quantita++;
+            } else {
+                carrello.push({
+                    id: idProdotto,
+                    nome,
+                    colorazione,
+                    prezzo,
+                    quantita: 1
                 });
-            });
-        }
-
-        function selezionaRiga(tr) {
-            document.querySelectorAll("tr.selected").forEach(r => r.classList.remove("selected"));
-            tr.classList.add("selected");
-
-            prodottoSelezionato = tr.dataset.id;
-
-            const colonne = Object.keys(strutturaProdotto);
-            const indicePrezzo = colonne.indexOf("prezzo");
-
-            if (indicePrezzo !== -1) {
-                const celle = tr.querySelectorAll("td");
-                document.getElementById("campoPrezzo").value = celle[indicePrezzo].innerText;
             }
+
+            aggiornaCarrello();
         }
 
-        function apriPopup(idProdotto) {
-            const immagini = tutteLeColorazioni.filter(c => c.prodottoid == idProdotto);
+        function aggiornaCarrello() {
+            if (carrello.length === 0) {
+                document.getElementById("carrelloContainer").innerHTML = "<p>Carrello vuoto</p>";
+                return;
+            }
 
-            let html = "";
-            immagini.forEach(img => {
-                html += `<img src="${img.percorsoimmagine}">`;
+            let html = "<table><tr><th>Prodotto</th><th>Colorazione</th><th>Prezzo</th><th>Q.tà</th><th>Totale</th><th></th></tr>";
+
+            carrello.forEach((item, index) => {
+                html += `
+                    <tr>
+                        <td>${item.nome}</td>
+                        <td>${item.colorazione}</td>
+                        <td>${item.prezzo.toFixed(2)}</td>
+                        <td>
+                            <input type="number" min="1" value="${item.quantita}" 
+                                onchange="cambiaQuantita(${index}, this.value)">
+                        </td>
+                        <td>${(item.prezzo * item.quantita).toFixed(2)}</td>
+                        <td><button onclick="rimuoviDalCarrello(${index})">X</button></td>
+                    </tr>
+                `;
             });
 
-            document.getElementById("popup-immagini").innerHTML = html;
-            document.getElementById("popup").style.display = "flex";
+            html += "</table>";
+
+            document.getElementById("carrelloContainer").innerHTML = html;
         }
 
-        function chiudiPopup() {
-            document.getElementById("popup").style.display = "none";
+        function cambiaQuantita(index, nuovaQta) {
+            carrello[index].quantita = parseInt(nuovaQta);
+            aggiornaCarrello();
+        }
+
+        function rimuoviDalCarrello(index) {
+            carrello.splice(index, 1);
+            aggiornaCarrello();
         }
 
         function annulla() {
