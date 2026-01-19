@@ -1,62 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Codifica caratteri: supporta lettere accentate e simboli -->
     <meta charset="utf-8" />
-    <!-- Titolo della pagina (scheda del browser) -->
     <title>Aggiungi Vendita</title>
-    <!-- Libreria ufficiale Supabase (necessaria per il database) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Stili grafici della pagina -->
+
     <style>
-        /* Layout verticale a sezioni proporzionali */
+        /* Layout verticale */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            height: 100vh;            /* usa tutta l’altezza dello schermo */
-            display: flex;
-            flex-direction: column;   /* impila le sezioni verticalmente */
-        }
-
-        /* Ogni sezione avrà un’altezza proporzionale */
-        .section-title {
-            flex: 0 0 5%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .section-prodotti {
-            flex: 0 0 45%;
-            overflow: hidden;
+            height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        .section-carrello-title {
-            flex: 0 0 5%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .section-title { flex: 0 0 5%; display: flex; align-items: center; justify-content: center; }
+        .section-prodotti { flex: 0 0 45%; overflow: hidden; display: flex; flex-direction: column; }
+        .section-carrello-title { flex: 0 0 5%; display: flex; align-items: center; justify-content: center; }
+        .section-carrello { flex: 0 0 40%; overflow: hidden; display: flex; flex-direction: column; }
+        .section-bottoni { flex: 0 0 5%; display: flex; align-items: center; justify-content: center; gap: 20px; }
 
-        .section-carrello {
-            flex: 0 0 40%;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .section-bottoni {
-            flex: 0 0 5%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        /* Mantieni la tua scroll-box ma adattata */
+        /* Contenitori scrollabili */
         .scroll-box {
             flex: 1;
             width: 95%;
@@ -67,102 +33,139 @@
             padding: 10px;
         }
 
-        /* Tabella prodotti */
+        /* Tabella */
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 18px;
-            position: relative;
         }
-        tr {
-            position: relative;
-            z-index: 1;
-        }
-        tr.row-open {
-            z-index: 10;  /* la riga con il menu aperto sta sopra alle altre */
-        }
-        th, td {
+
+        /* Righe alte e senza padding verticale */
+        table td, table th {
             border: 1px solid #444;
-            padding: 10px 20px;
+            height: 50px;
+            padding: 0 10px;     /* niente padding verticale */
+            vertical-align: middle;
         }
-        td {
-            position: relative;
+
+        /* Altezza reale SOLO per la colonna immagini */
+        table td:nth-child(5) .color-select-display {
+            height: 120px;   /* scegli tu */
         }
-        th {
-            background-color: #eee;
+
+
+        /* Header sticky */
+        thead th {
+            position: sticky;
+            top: 0;
+            background: #eee;
+            z-index: 5;
         }
-        /* Selettore visuale delle colorazioni */
+
+        /* Immagini che riempiono la cella */
+        table td img {
+            height: 100%;
+            width: auto;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Prime colonne strette */
+        table td:nth-child(1),
+        table th:nth-child(1),
+        table td:nth-child(2),
+        table th:nth-child(2),
+        table td:nth-child(3),
+        table th:nth-child(3),
+        table td:nth-child(4),
+        table th:nth-child(4),
+        table td:nth-child(6),
+        table th:nth-child(6) {
+            width: 80px;
+            max-width: 80px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Selettore colorazioni */
         .color-select {
-            width: 120px;
+            width: 100%;
+            height: 100%;
             cursor: pointer;
             user-select: none;
-            position: relative; 
-            z-index: 100;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        /* Box che mostra l’immagine selezionata */
+
         .color-select-display {
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            padding: 0;
             border: 1px solid #444;
-            padding: 4px;
             border-radius: 6px;
             background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         .color-select-display img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             border-radius: 6px;
         }
-        /* Menu a tendina delle colorazioni */
-        .color-select-options { 
-            position: absolute; 
-            top: 100%; /* subito sotto il box, non 80px fissi */ 
-            left: 0; 
-            background: white; 
-            border: 1px solid #444; 
-            border-radius: 6px; 
-            padding: 10px; 
-            display: none; 
-            flex-wrap: wrap; 
-            gap: 10px; 
-            z-index: 1000; /* sopra le altre righe */ 
-            pointer-events: none; 
+
+        /* Menu colorazioni */
+        .color-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            display: none;
+            flex-wrap: wrap;
+            gap: 10px;
+            z-index: 1000;
+            pointer-events: none;
         }
-        /* Immagini nel menu a tendina */
+
         .color-select-options img {
-            width: 100%;
-            height: 100%;
+            width: 70px;
+            height: 70px;
             object-fit: cover;
             border-radius: 6px;
             cursor: pointer;
             border: 2px solid transparent;
         }
+
         .color-select-options img:hover {
             border-color: #4CAF50;
         }
-        /* Tabella del carrello */
-        #carrelloContainer table {
-            margin-top: 20px;
-            max-height: 300px;
-        }
+
+        /* Carrello */
         #carrelloContainer input {
             width: 60px;
             font-size: 16px;
         }
-        /* Pulsante + */
+
         .btn-add {
             width: 40px;
             height: 40px;
             font-size: 22px;
             border-radius: 6px;
             cursor: pointer;
-            /*position: relative;
-            z-index: 10000;  */
         }
     </style>
 </head>
+
 
 <body>
     <div class="section-title">
