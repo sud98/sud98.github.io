@@ -1,110 +1,150 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <!--
+        Imposta la codifica dei caratteri.
+        UTF‑8 permette lettere accentate, simboli, emoji e caratteri internazionali.
+    -->
     <meta charset="utf-8" />
+
+    <!--
+        Titolo della pagina.
+        È ciò che appare nella scheda del browser.
+    -->
     <title>Aggiungi Vendita</title>
 
+    <!--
+        Importa la libreria ufficiale di Supabase.
+        Serve per fare query al database: select, insert, update, ecc.
+        Senza questa riga, il codice "supabase.createClient()" darebbe errore.
+    -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!--
+        CSS interno.
+        Tutto ciò che sta dentro <style> definisce l'aspetto grafico della pagina.
+        Ogni blocco "selettore { proprietà: valore; }" modifica elementi HTML.
+    -->
     <style>
+
+        /* Stile generale della pagina */
         body {
-            font-family: Arial;
-            text-align: center;
+            font-family: Arial;      /* Font principale */
+            text-align: center;      /* Centra il testo */
         }
 
+        /* Stile del titolo principale */
         h1 {
-            margin-top: 20px;
+            margin-top: 20px;        /* Spazio sopra il titolo */
         }
 
+        /* Contenitore scrollabile per la tabella prodotti */
         .scroll-box {
-            width: 90%;
-            max-height: 500px;
-            margin: 20px auto;
-            overflow-y: auto;
-            border: 2px solid #444;
-            border-radius: 8px;
-            padding: 10px;
+            width: 90%;              /* Larghezza del contenitore */
+            max-height: 500px;       /* Altezza massima prima dello scroll */
+            margin: 20px auto;       /* Centra il box e aggiunge margini */
+            overflow-y: auto;        /* Aggiunge la scrollbar verticale */
+            border: 2px solid #444;  /* Bordo scuro */
+            border-radius: 8px;      /* Angoli arrotondati */
+            padding: 10px;           /* Spazio interno */
         }
 
+        /* Stile generale della tabella */
         table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 18px;
-            position: relative;
+            border-collapse: collapse; /* Unisce i bordi delle celle */
+            width: 100%;               /* Occupa tutta la larghezza */
+            font-size: 18px;           /* Testo più grande */
+            position: relative;        /* Necessario per menu a tendina */
         }
 
+        /* Celle della tabella */
         th, td {
-            border: 1px solid #444;
-            padding: 10px 20px;
+            border: 1px solid #444;    /* Bordo scuro */
+            padding: 10px 20px;        /* Spazio interno */
         }
 
+        /* Intestazioni della tabella */
         th {
-            background-color: #eee;
+            background-color: #eee;    /* Sfondo grigio chiaro */
         }
 
-        /* SELECT VISUALE CON IMMAGINI */
+        /* 
+            SELETTORE VISUALE DELLE COLORAZIONI
+            Questo è il contenitore del "menu a tendina" personalizzato.
+        */
         .color-select {
-            position: relative;
-            width: 120px;
-            cursor: pointer;
-            user-select: none;
-            z-index: 100;
+            position: relative;        /* Serve per posizionare il menu interno */
+            width: 120px;              /* Larghezza del selettore */
+            cursor: pointer;           /* Mostra la mano al passaggio */
+            user-select: none;         /* Impedisce la selezione del testo */
+            z-index: 100;              /* Lo porta sopra la tabella */
         }
 
+        /* Box che mostra l'immagine selezionata */
         .color-select-display {
-            border: 1px solid #444;
-            padding: 4px;
-            border-radius: 6px;
-            background: white;
+            border: 1px solid #444;    /* Bordo */
+            padding: 4px;              /* Spazio interno */
+            border-radius: 6px;        /* Angoli arrotondati */
+            background: white;         /* Sfondo bianco */
         }
 
+        /* Immagine principale del selettore */
         .color-select-display img {
-            width: 100px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 6px;
+            width: 100px;              /* Larghezza immagine */
+            height: 70px;              /* Altezza immagine */
+            object-fit: cover;         /* Ritaglia senza deformare */
+            border-radius: 6px;        /* Angoli arrotondati */
         }
 
+        /* 
+            MENU A TENDINA DELLE COLORAZIONI
+            Appare quando clicchi sul selettore.
+        */
         .color-select-options {
-            position: absolute;
-            top: 80px;
+            position: absolute;        /* Posizionato rispetto al selettore */
+            top: 80px;                 /* Appare sotto il selettore */
             left: 0;
-            width: 260px;
-            background: white;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 10px;
-            display: none;
-            flex-wrap: wrap;
-            gap: 10px;
-            z-index: 9999;
-            pointer-events: auto;
+            width: 260px;              /* Larghezza del menu */
+            background: white;         /* Sfondo bianco */
+            border: 1px solid #444;    /* Bordo */
+            border-radius: 6px;        /* Angoli arrotondati */
+            padding: 10px;             /* Spazio interno */
+            display: none;             /* Nascosto di default */
+            flex-wrap: wrap;           /* Le immagini vanno a capo */
+            gap: 10px;                 /* Spazio tra immagini */
+            z-index: 9999;             /* Sopra tutto */
+            pointer-events: auto;      /* Assicura che i click funzionino */
         }
 
+        /* Immagini dentro il menu a tendina */
         .color-select-options img {
-            width: 100px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 2px solid transparent;
+            width: 100%;              /* Larghezza immagine */
+            height: 100%;              /* Altezza immagine */
+            object-fit: cover;         /* Ritaglia senza deformare */
+            border-radius: 6px;        /* Angoli arrotondati */
+            cursor: pointer;           /* Cliccabile */
+            border: 2px solid transparent; /* Bordo invisibile */
         }
 
+        /* Effetto hover sulle immagini del menu */
         .color-select-options img:hover {
-            border-color: #4CAF50;
+            border-color: #4CAF50;     /* Bordo verde al passaggio */
         }
 
-        /* CARRELLO */
+        /* Tabella del carrello */
         #carrelloContainer table {
-            margin-top: 20px;
+            margin-top: 20px;          /* Spazio sopra la tabella */
         }
 
+        /* Input quantità nel carrello */
         #carrelloContainer input {
-            width: 60px;
-            font-size: 16px;
+            width: 60px;               /* Larghezza fissa */
+            font-size: 16px;           /* Testo leggibile */
         }
+
     </style>
 </head>
+
 
 <body>
 
