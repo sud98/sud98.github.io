@@ -146,62 +146,82 @@
             document.getElementById("campoData").value = oggi.toISOString().split("T")[0];
         }
 
-        function generaTabellaProdotti(dati) {
-            const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
-            const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
-
-            let html = "<table><tr>";
-
-            for (const col of colonne) html += `<th>${col}</th>`;
-            html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
-
-            for (const riga of dati) {
-                html += `<tr data-id="${riga.id}">`;
-
-                for (const col of colonne) html += `<td>${riga[col]}</td>`;
-
-                const colori = tutteLeColorazioni.filter(c => c.prodottoid === riga.id);
-                let select = `<select class="select-colore" data-id="${riga.id}">`;
-                colori.forEach(c => {
-                    select += `<option value="${c.percorsoimmagine}">${c.percorsoimmagine.split("/").pop()}</option>`;
-                });
-                select += `</select>`;
-
-                html += `<td>${select}</td>`;
-                html += `<td><button onclick="aggiungiAlCarrello(${riga.id})">+</button></td>`;
-                html += "</tr>";
-            }
-
-            html += "</table>";
-            return html;
+        function generaTabellaProdotti(dati) 
+        {
+                const colonneDaSaltare = ["sigla_prodotto", "sigla_tipologia", "sigla_tema"];
+                const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
+            
+                let html = "<table><tr>";
+            
+                for (const col of colonne) html += `<th>${col}</th>`;
+                html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
+            
+                        for (const riga of dati) 
+                        {
+                            html += `<tr data-id="${riga.id}">`;
+                    
+                            for (const col of colonne) html += `<td>${riga[col]}</td>`;
+                    
+                            const colori = tutteLeColorazioni.filter(c => c.prodottoid === riga.id);
+                    
+                            // PREVIEW + SELECT
+                            let select = `
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <img id="preview-${riga.id}" src="${colori[0]?.percorsoimmagine || ''}" style="width:60px; border-radius:6px;">
+                                    <select class="select-colore" data-id="${riga.id}" onchange="cambiaPreview(${riga.id})">
+                            `;
+                    
+                            colori.forEach(c => {
+                                const nome = c.percorsoimmagine.split("/").pop();
+                                select += `<option value="${c.percorsoimmagine}">${nome}</option>`;
+                            });
+                    
+                            select += `</select></div>`;
+                    
+                            html += `<td>${select}</td>`;
+                            html += `<td><button onclick="aggiungiAlCarrello(${riga.id})">+</button></td>`;
+                            html += "</tr>";
+                        }
+            
+                html += "</table>";
+                return html;
         }
 
-        function aggiungiAlCarrello(idProdotto) {
-            const select = document.querySelector(`select[data-id="${idProdotto}"]`);
-            const colorazione = select.value;
-
-            const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
-            const celle = riga.querySelectorAll("td");
-
-            const prezzo = parseFloat(celle[Object.keys(strutturaProdotto).indexOf("prezzo")].innerText);
-            const nome = celle[1].innerText;
-
-            const esistente = carrello.find(x => x.id === idProdotto && x.colorazione === colorazione);
-
-            if (esistente) {
-                esistente.quantita++;
-            } else {
-                carrello.push({
-                    id: idProdotto,
-                    nome,
-                    colorazione,
-                    prezzo,
-                    quantita: 1
-                });
-            }
-
-            aggiornaCarrello();
+        function cambiaPreview(idProdotto) 
+        { 
+            const select = document.querySelector(`select[data-id="${idProdotto}"]`); 
+            const img = document.getElementById(`preview-${idProdotto}`); 
+            img.src = select.value; 
         }
+        
+        function aggiungiAlCarrello(idProdotto) 
+        {
+                const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
+                const celle = riga.querySelectorAll("td");
+            
+                const nome = celle[1].innerText; // seconda colonna = nome
+                const prezzo = parseFloat(celle[2].innerText); // terza colonna = prezzo
+            
+                const select = document.querySelector(`select[data-id="${idProdotto}"]`);
+                const colorazione = select.value;
+            
+                const esistente = carrello.find(x => x.id === idProdotto && x.colorazione === colorazione);
+            
+                if (esistente) {
+                    esistente.quantita++;
+                } else {
+                    carrello.push({
+                        id: idProdotto,
+                        nome,
+                        colorazione,
+                        prezzo,
+                        quantita: 1
+                    });
+                }
+            
+                aggiornaCarrello();
+        }
+
 
         function aggiornaCarrello() {
             if (carrello.length === 0) {
