@@ -43,7 +43,7 @@
         /* Righe alte e senza padding verticale */
         table td, table th {
             border: 1px solid #444;
-            height: 50px;
+            min-height: 50px;
             padding: 0 10px;     /* niente padding verticale */
             vertical-align: middle;
         }
@@ -73,21 +73,37 @@
         }
 
         /* Prime colonne strette */
-        table td:nth-child(1),
-        table th:nth-child(1),
-        table td:nth-child(2),
-        table th:nth-child(2),
-        table td:nth-child(3),
-        table th:nth-child(3),
-        table td:nth-child(4),
-        table th:nth-child(4),
-        table td:nth-child(6),
-        table th:nth-child(6) {
+        #tabellaprodotti td:nth-child(1),
+        #tabellaprodotti th:nth-child(1),
+        #tabellaprodotti td:nth-child(2),
+        #tabellaprodotti th:nth-child(2),
+        #tabellaprodotti td:nth-child(3),
+        #tabellaprodotti th:nth-child(3),
+        #tabellaprodotti td:nth-child(4),
+        #tabellaprodotti th:nth-child(4),
+        #tabellaprodotti td:nth-child(6),
+        #tabellaprodotti th:nth-child(6) {
             width: 80px;
             max-width: 80px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        #tabellaCarrello td:nth-child(1),
+        #tabellaCarrello th:nth-child(1),
+        #tabellaCarrello td:nth-child(2),
+        #tabellaCarrello th:nth-child(2) {
+            width: 35%;
+        }
+
+        #tabellaCarrello td:nth-child(3),
+        #tabellaCarrello th:nth-child(3),
+        #tabellaCarrello td:nth-child(4),
+        #tabellaCarrello th:nth-child(4),
+        #tabellaCarrello td:nth-child(5),
+        #tabellaCarrello th:nth-child(5) {
+            width: 10%;
         }
 
         /* Selettore colorazioni */
@@ -125,26 +141,32 @@
         .color-select-options {
             position: absolute;
             top: 100%;
-            left: 0;
+            left: 50%;
+            transform: translateX(-50%);   /* centra il menu */
+            width: 50%;                  /* larghezza indipendente dalla colonna */
+            overflow-y: auto;              /* scroll verticale */
             background: white;
             border: 1px solid #444;
             border-radius: 6px;
-            padding: 10px;
+            padding: 5px;
             display: none;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-direction: column;        /* una sopra l’altra */
             z-index: 1000;
-            pointer-events: none;
+            pointer-events: auto;
         }
 
+
         .color-select-options img {
-            width: 70px;
-            height: 70px;
-            object-fit: cover;
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
             border-radius: 6px;
             cursor: pointer;
             border: 2px solid transparent;
+            margin-bottom: 5px;
         }
+
+
 
         .color-select-options img:hover {
             border-color: #4CAF50;
@@ -201,6 +223,7 @@
         let tutteLeColorazioni = [];
         let strutturaProdotto = null;
         let carrello = [];
+
         async function caricaProdotti() {
             const { data: prodotti } =
                 await client.from("prodotti").select("*").order("id", { ascending: true });
@@ -216,7 +239,7 @@
         function generaTabellaProdotti(dati) {
             const colonneDaSaltare = ["id","sigla_prodotto", "sigla_tipologia", "sigla_tema","descrizione"];
             const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
-            let html = "<table><tr>";
+            let html = '<table><tr>';
             for (const col of colonne) html += `<th>${col}</th>`;
             html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
                 for (const riga of dati) {
@@ -307,7 +330,7 @@
             const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
             const celle = riga.querySelectorAll("td");
             const nome = celle[1].innerText;
-            const prezzo = parseFloat(celle[5].innerText);
+            const prezzo = parseFloat(celle[3].innerText);
             const preview = document.getElementById(`color-preview-${idProdotto}`);
             const colorazione = preview.src;
             const idColorazione = preview.dataset.idcolorazione;
