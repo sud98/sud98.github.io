@@ -253,14 +253,6 @@
     </div>
 
     <script>
-        window.onload = function () {
-            caricaProdotti();
-
-            const oggi = new Date().toISOString().split("T")[0];
-            document.getElementById("dataVendita").value = oggi;
-        };
-
-
         const client = supabase.createClient(
             "https://ixarnqyrsonhshkctcki.supabase.co",
             "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
@@ -448,7 +440,11 @@
             });
         });
 
-        window.onload = caricaProdotti;
+        window.onload = function(){
+            caricaProdotti;
+            const oggi = new Date().toISOString().split("T")[0];
+            document.getElementById("dataVendita").value = oggi;
+        }
     </script>
 
 </body>
