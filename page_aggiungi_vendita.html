@@ -240,7 +240,7 @@
 
     <div class="section-dati">
         <label for="campo1">Destinatario:</label>
-        <input type="text" id="campo1" placeholder="Inserisci nome">
+        <input type="text" id="Destinatario" placeholder="Inserisci nome">
 
         <label for="dataVendita">Data vendita:</label> 
         <input type="date" id="dataVendita">
@@ -248,7 +248,7 @@
 
 
     <div class="section-bottoni">
-        <button>Conferma</button>
+        <button onclick="confermaVendita()">Conferma</button>
         <button onclick="window.location.href='page_vendite.html'">Annulla</button>
     </div>
 
@@ -429,6 +429,53 @@
             aggiornaCarrello();
         }
 
+        async function confermaVendita() {
+            if (carrello.length === 0) {
+                alert("Il carrello è vuoto.");
+                return;
+            }
+
+            const nomeCliente = document.getElementById("Destinatario").value.trim();
+            const dataVendita = document.getElementById("dataVendita").value;
+
+            if (!nomeCliente) {
+                alert("Inserisci il nome del cliente.");
+                return;
+            }
+
+            let righeDaInserire = [];
+
+            // Per ogni elemento del carrello...
+            carrello.forEach(item => {
+                // ...creo N righe, dove N = quantità
+                for (let i = 0; i < item.quantita; i++) {
+                    righeDaInserire.push({
+                        prodottoid: "ORECCHINI",
+                        colorazioneid: item.idColorazione,
+                        prezzo: item.prezzo,
+                        destinatario: nomeCliente,
+                        data: dataVendita
+                    });
+                }
+            });
+
+            console.log(righeDaInserire);
+
+            // Inserimento multiplo in Supabase
+            const { data, error } = await client
+                .from("vendite")
+                .insert(righeDaInserire);
+
+            if (error) {
+                console.error("Errore durante il salvataggio:", error);
+                alert("Errore durante il salvataggio.");
+                return;
+            }
+
+            // Tutto ok → torna alla pagina vendite
+            window.location.href = "page_vendite.html";
+        }
+
         document.addEventListener("click", function (e) {
             const tuttiMenu = document.querySelectorAll(".color-select-options");
 
@@ -441,7 +488,7 @@
         });
 
         window.onload = function(){
-            caricaProdotti;
+            caricaProdotti();
             const oggi = new Date().toISOString().split("T")[0];
             document.getElementById("dataVendita").value = oggi;
         }
