@@ -19,8 +19,9 @@
         .section-title { flex: 0 0 5%; display: flex; align-items: center; justify-content: center; }
         .section-prodotti { flex: 0 0 45%; overflow: hidden; display: flex; flex-direction: column; }
         .section-carrello-title { flex: 0 0 5%; display: flex; align-items: center; justify-content: center; }
-        .section-carrello { flex: 0 0 40%; overflow: hidden; display: flex; flex-direction: column; }
-        .section-bottoni { flex: 0 0 5%; display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .section-carrello { flex: 0 0 25%; overflow: hidden; display: flex; flex-direction: column; }
+        .section-dati { flex: 0 0 10%; display: flex; align-items: center; justify-content: center; gap: 20px;}
+        .section-bottoni { flex: 0 0 10%; display: flex; align-items: center; justify-content: center; gap: 20px; }
 
         /* Contenitori scrollabili */
         .scroll-box {
@@ -166,8 +167,6 @@
             margin-bottom: 5px;
         }
 
-
-
         .color-select-options img:hover {
             border-color: #4CAF50;
         }
@@ -179,12 +178,41 @@
         }
 
         .btn-add {
-            width: 40px;
-            height: 40px;
-            font-size: 22px;
+            width: 100px;
+            height: 100px;
+            font-size: 40px;
             border-radius: 6px;
             cursor: pointer;
         }
+
+        .section-bottoni button {
+            width: 45%;
+            height: 60px;
+            font-size: 22px;
+            border-radius: 8px;
+        }
+
+        .section-dati {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+        }
+
+        .section-dati label {
+            font-weight: bold;
+            width: 15%;
+        }
+
+        .section-dati input {
+            width: 35%;
+            padding: 8px 12px;
+            font-size: 18px;
+            border: 2px solid #444;
+            border-radius: 6px;
+        }
+
     </style>
 </head>
 
@@ -210,12 +238,29 @@
         </div>
     </div>
 
+    <div class="section-dati">
+        <label for="campo1">Destinatario:</label>
+        <input type="text" id="campo1" placeholder="Inserisci nome">
+
+        <label for="dataVendita">Data vendita:</label> 
+        <input type="date" id="dataVendita">
+    </div>
+
+
     <div class="section-bottoni">
         <button>Conferma</button>
-        <button>Annulla</button>
+        <button onclick="window.location.href='page_vendite.html'">Annulla</button>
     </div>
 
     <script>
+        window.onload = function () {
+            caricaProdotti();
+
+            const oggi = new Date().toISOString().split("T")[0];
+            document.getElementById("dataVendita").value = oggi;
+        };
+
+
         const client = supabase.createClient(
             "https://ixarnqyrsonhshkctcki.supabase.co",
             "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
