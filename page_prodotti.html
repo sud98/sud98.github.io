@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prodotti</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #f5f5f5;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* FILTRI */
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        select, input[type="text"] {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #222;
+            color: #f5f5f5;
+        }
+
+        /* CONTENITORE SCROLLABILE */
+        .table-container {
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        /* TABELLA */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #222;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #333;
+            font-size: 14px;
+        }
+
+        th {
+            background: #333;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        tr:hover {
+            background: #2a2a2a;
+            cursor: pointer;
+        }
+
+        td[contenteditable="true"] {
+            background: #1b1b1b;
+        }
+
+        img {
+            max-width: 60px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        /* PULSANTI */
+        .buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .btn-brochure { background: #5bc0de; color: #fff; }
+        .btn-add      { background: #5cb85c; color: #fff; }
+        .btn-del      { background: #d9534f; color: #fff; }
+    </style>
+</head>
+
+<body>
+
+<h1>Prodotti</h1>
+
+<!-- FILTRI -->
+<div class="filters">
+    <select id="filtro_prodotto" onchange="filterProdotti()">
+        <option value="">Tutti i prodotti</option>
+    </select>
+
+    <select id="filtro_tipologia" onchange="filterProdotti()">
+        <option value="">Tutte le tipologie</option>
+    </select>
+
+    <select id="filtro_tema" onchange="filterProdotti()">
+        <option value="">Tutti i temi</option>
+    </select>
+
+    <input type="text" id="filtro_descrizione" placeholder="Filtra per descrizione..." oninput="filterProdotti()">
+</div>
+
+<!-- TABELLA SCROLLABILE -->
+<div class="table-container">
+    <table id="table_prodotti">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Prodotto</th>
+                <th>Tipologia</th>
+                <th>Tema</th>
+                <th>Descrizione</th>
+                <th>Prezzo</th>
+                <th>Immagine</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<!-- PULSANTI -->
+<div class="buttons">
+    <button class="btn-brochure" onclick="creaBrochure()">Crea Brochure</button>
+    <button class="btn-add" onclick="vaiAggiungiProdotto()">Aggiungi</button>
+    <button class="btn-del" onclick="eliminaProdotto()">Elimina</button>
+</div>
+
+<script>
+    const { createClient } = supabase;
+
+    const db = createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    const BASE_IMG_URL = "https://ixarnqyrsonhshkctcki.supabase.co/storage/v1/object/public/Immagini/";
+
+    let prodottiCache = [];
+    let prodottoSelezionato = null;
+
+    window.onload = async () => {
+        await loadFiltri();
+        await loadProdotti();
+    };
+
+    /* ============================
+       CARICAMENTO FILTRI
+    ============================ */
+    async function loadFiltri() {
+        const [prodotti, tipologie, temi] = await Promise.all([
+            db.from("sigla_prodotto").select("*").order("codice", { ascending: true }),
+            db.from("sigla_tipologia").select("*").order("codice", { ascending: true }),
+            db.from("sigla_tema").select("*").order("codice", { ascending: true })
+        ]);
+
+        const selProd = document.getElementById("filtro_prodotto");
+        const selTip  = document.getElementById("filtro_tipologia");
+        const selTema = document.getElementById("filtro_tema");
+
+        if (!prodotti.error) {
+            prodotti.data.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.codice;
+                opt.textContent = p.codice;
+                selProd.appendChild(opt);
+            });
+        }
+
+        if (!tipologie.error) {
+            tipologie.data.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t.codice;
+                opt.textContent = t.codice;
+                selTip.appendChild(opt);
+            });
+        }
+
+        if (!temi.error) {
+            temi.data.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t.codice;
+                opt.textContent = t.codice;
+                selTema.appendChild(opt);
+            });
+        }
+    }
+
+    /* ============================
+       CARICAMENTO PRODOTTI
+    ============================ */
+    async function loadProdotti() {
+        const { data, error } = await db
+            .from("prodotti")
+            .select("*")
+            .order("id", { ascending: true });
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        prodottiCache = data || [];
+        renderProdotti();
+    }
+
+    function renderProdotti() {
+        const tbody = document.querySelector("#table_prodotti tbody");
+        tbody.innerHTML = "";
+
+        const fProd = document.getElementById("filtro_prodotto").value;
+        const fTip  = document.getElementById("filtro_tipologia").value;
+        const fTema = document.getElementById("filtro_tema").value;
+        const fDesc = document.getElementById("filtro_descrizione").value.toLowerCase();
+
+        prodottiCache
+            .filter(p => !fProd || p.prodotto === fProd)
+            .filter(p => !fTip  || p.tipologia === fTip)
+            .filter(p => !fTema || p.tema === fTema)
+            .filter(p => !fDesc || (p.descrizione || "").toLowerCase().includes(fDesc))
+            .forEach(row => {
+                const tr = document.createElement("tr");
+
+                tr.onclick = () => {
+                    prodottoSelezionato = row;
+                    evidenziaRiga(tr);
+                };
+
+                const imgUrl = BASE_IMG_URL + row.id + "_01.png";
+
+                tr.innerHTML = `
+                    <td>${row.id}</td>
+                    <td>${row.prodotto}</td>
+                    <td>${row.tipologia}</td>
+                    <td>${row.tema}</td>
+                    <td contenteditable="true"
+                        onblur="updateDescrizione('${row.id}', this.innerText)">
+                        ${row.descrizione || ""}
+                    </td>
+                    <td contenteditable="true"
+                        onblur="updatePrezzo('${row.id}', this.innerText)">
+                        ${row.prezzo ?? ""}
+                    </td>
+                    <td><img src="${imgUrl}" alt=""></td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+    }
+
+    function filterProdotti() {
+        renderProdotti();
+    }
+
+    function evidenziaRiga(trSelezionata) {
+        document.querySelectorAll("#table_prodotti tbody tr").forEach(tr => {
+            tr.style.backgroundColor = "";
+        });
+        trSelezionata.style.backgroundColor = "#444";
+    }
+
+    /* ============================
+       UPDATE INLINE
+    ============================ */
+    async function updateDescrizione(id, value) {
+        const descrizione = value.trim();
+
+        const { error } = await db
+            .from("prodotti")
+            .update({ descrizione })
+            .eq("id", id);
+
+        if (error) {
+            alert("Errore aggiornando descrizione: " + error.message);
+            await loadProdotti();
+        }
+    }
+
+    async function updatePrezzo(id, value) {
+        const prezzo = parseFloat(value.replace(",", "."));
+
+        if (isNaN(prezzo)) {
+            alert("Prezzo non valido");
+            await loadProdotti();
+            return;
+        }
+
+        const { error } = await db
+            .from("prodotti")
+            .update({ prezzo })
+            .eq("id", id);
+
+        if (error) {
+            alert("Errore aggiornando prezzo: " + error.message);
+            await loadProdotti();
+        }
+    }
+
+    /* ============================
+       PULSANTI
+    ============================ */
+    function vaiAggiungiProdotto() {
+        window.location.href = "page_aggiungi_prodotto.html";
+    }
+
+    async function eliminaProdotto() {
+        if (!prodottoSelezionato) {
+            alert("Seleziona un prodotto dalla tabella");
+            return;
+        }
+
+        if (!confirm("Vuoi davvero eliminare il prodotto " + prodottoSelezionato.id + "?")) {
+            return;
+        }
+
+        const { error } = await db
+            .from("prodotti")
+            .delete()
+            .eq("id", prodottoSelezionato.id);
+
+        if (error) {
+            alert("Errore eliminando prodotto: " + error.message);
+            return;
+        }
+
+        prodottoSelezionato = null;
+        await loadProdotti();
+    }
+
+    function creaBrochure() {
+        console.log("Funzione brochure non ancora implementata");
+    }
+</script>
+
+</body>
+</html>
