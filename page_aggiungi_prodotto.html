@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Aggiungi Prodotto</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            grid-template-rows: repeat(6, 1fr) 80px;
+            height: 100vh;
+            padding: 20px;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 25px;
+            font-weight: bold;
+            align-self: center;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        textarea {
+            height: 100%;
+            resize: vertical;
+        }
+
+        .buttons {
+            grid-column: 2;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-exit {
+            background: #aa0000;
+            color: white;
+        }
+
+        .btn-add {
+            background: #008800;
+            color: white;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="container">
+
+    <label for="prodotto">Prodotto:</label>
+    <select id="prodotto"></select>
+
+    <label for="tipologia">Tipologia:</label>
+    <select id="tipologia"></select>
+
+    <label for="tema">Tema:</label>
+    <select id="tema"></select>
+
+    <label for="prezzo">Prezzo:</label>
+    <input id="prezzo" type="number">
+
+    <label for="descrizione">Descrizione:</label>
+    <textarea id="descrizione"></textarea>
+
+    <div class="buttons">
+        <button class="btn-add" id="btnAggiungi">Aggiungi</button>
+        <button class="btn-exit" id="btnEsci" onclick="window.location.href='page_prodotti.html'">❌ Esci</button>
+    </div>
+
+</div>
+
+<script>
+    // ===============================
+    // SUPABASE CLIENT
+    // ===============================
+    const client = supabase.createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    // ===============================
+    // CARICAMENTO DATI
+    // ===============================
+    async function loadProdotti() {
+        const { data } = await client
+            .from("sigla_prodotto")
+            .select("codice")
+            .order("codice");
+
+        fillSelect("prodotto", data);
+    }
+
+    async function loadTipologie(prodotto) {
+        const { data } = await client
+            .from("sigla_tipologia")
+            .select("codice")
+            .eq("prodotto", prodotto)
+            .order("codice");
+
+        fillSelect("tipologia", data);
+    }
+
+    async function loadTemi() {
+        const { data } = await client
+            .from("sigla_tema")
+            .select("codice")
+            .order("codice");
+
+        fillSelect("tema", data);
+    }
+
+    function fillSelect(id, items) {
+        const select = document.getElementById(id);
+        select.innerHTML = "";
+
+        items.forEach(i => {
+            const opt = document.createElement("option");
+            opt.value = i.codice;
+            opt.textContent = i.codice;
+            select.appendChild(opt);
+        });
+    }
+
+    // ===============================
+    // GENERA SIGLA + NUMERO
+    // ===============================
+    async function generaSiglaCompleta(prodotto, tipologia, tema) {
+
+    // --- SIGLA PRODOTTO ---
+    const { data: dataProdotto, error: err_1 } = await client
+        .from("sigla_prodotto")
+        .select("sigla")
+        .eq("codice", prodotto);
+
+    console.log("dataProdotto:", dataProdotto, "err_1:", err_1);
+
+    if (err_1) {
+        console.error("Errore ricerca sigla prodotto:", err_1);
+        alert("Errore sigla prodotto");
+        return null;
+    }
+    if (!dataProdotto || dataProdotto.length === 0) {
+        console.error("Nessuna sigla prodotto trovata per", prodotto);
+        alert("Nessuna sigla prodotto trovata");
+        return null;
+    }
+
+    const siglaProdotto = dataProdotto[0].sigla;
+
+    // --- SIGLA TIPOLOGIA ---
+    const { data: dataTipologia, error: err_2 } = await client
+        .from("sigla_tipologia")
+        .select("sigla")
+        .eq("codice", tipologia);
+
+    console.log("dataTipologia:", dataTipologia, "err_2:", err_2);
+
+    if (err_2) {
+        console.error("Errore ricerca sigla tipologia:", err_2);
+        alert("Errore sigla tipologia");
+        return null;
+    }
+    if (!dataTipologia || dataTipologia.length === 0) {
+        console.error("Nessuna sigla tipologia trovata per", tipologia);
+        alert("Nessuna sigla tipologia trovata");
+        return null;
+    }
+
+    const siglaTipologia = dataTipologia[0].sigla;
+
+    // --- SIGLA TEMA ---
+    const { data: dataTema, error: err_3 } = await client
+        .from("sigla_tema")
+        .select("sigla")
+        .eq("codice", tema);
+
+    console.log("dataTema:", dataTema, "err_3:", err_3);
+
+    if (err_3) {
+        console.error("Errore ricerca sigla tema:", err_3);
+        alert("Errore sigla tema");
+        return null;
+    }
+    if (!dataTema || dataTema.length === 0) {
+        console.error("Nessuna sigla tema trovata per", tema);
+        alert("Nessuna sigla tema trovata");
+        return null;
+    }
+
+    const siglaTema = dataTema[0].sigla;
+
+    // --- SIGLA BASE ---
+    const siglaBase = siglaProdotto + siglaTipologia + siglaTema;
+    console.log("Sigla base:", siglaBase);
+    //alert("Sigla base: " + siglaBase);
+
+    // --- CERCA PRODOTTI ESISTENTI ---
+    const { data, error } = await client
+        .from("prodotti")
+        .select("id")
+        .like("id", siglaBase + "%");
+
+    console.log("Prodotti trovati per siglaBase:", data, "error:", error);
+
+    if (error) {
+        console.error("Errore ricerca prodotti:", error);
+        alert("Errore ricerca prodotti");
+        return null;
+    }
+
+    let maxNumero = 0;
+
+    (data || []).forEach(row => {
+        const id = row.id;
+        const numeroStr = id.substring(siglaBase.length);
+        const numero = parseInt(numeroStr);
+
+        if (!isNaN(numero) && numero > maxNumero) {
+            maxNumero = numero;
+        }
+    });
+
+    const nuovoNumero = (maxNumero + 1).toString().padStart(4, "0");
+    const siglaFinale = siglaBase + nuovoNumero;
+
+    console.log("Sigla finale:", siglaFinale);
+    //alert("Sigla finale: " + siglaFinale);
+
+    return siglaFinale;
+}
+
+
+    // ===============================
+    // EVENTI
+    // ===============================
+    document.addEventListener("DOMContentLoaded", () => {
+        loadProdotti();
+        loadTemi();
+
+        document.getElementById("prodotto").addEventListener("change", (e) => {
+            loadTipologie(e.target.value);
+        });
+
+        document.getElementById("btnAggiungi").addEventListener("click", async () => {
+            const prodotto = document.getElementById("prodotto").value;
+            const tipologia = document.getElementById("tipologia").value;
+            const tema = document.getElementById("tema").value;
+            const prezzo = document.getElementById("prezzo").value;
+            const descrizione = document.getElementById("descrizione").value;
+
+            // Genera la sigla completa
+            const sigla = await generaSiglaCompleta(prodotto, tipologia, tema);
+
+            if (!sigla) {
+                alert("Errore nella generazione della sigla");
+                return;
+            }
+
+            // Inserimento nella tabella prodotti
+            const { error } = await client
+                .from("prodotti")
+                .insert({
+                    id: sigla,          // <-- ID = sigla completa
+                    prodotto: prodotto,
+                    tipologia: tipologia,
+                    tema: tema,
+                    descrizione: descrizione,
+                    prezzo: prezzo
+                });
+
+            if (error) {
+                alert("Errore durante l'inserimento");
+                console.error(error);
+            } else {
+                alert("Prodotto aggiunto con sigla: " + sigla);
+                window.location.href='page_prodotti.html'
+            }
+
+        });
+
+
+  
+    });
+</script>
+
+</body>
+</html>
