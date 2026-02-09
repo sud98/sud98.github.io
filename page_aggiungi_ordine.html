@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Ordine</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #f5f5f5;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form {
+            max-width: 500px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input, select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #222;
+            color: #fff;
+        }
+
+        button {
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .btn-save { background: #5cb85c; color: white; }
+        .btn-back { background: #5bc0de; color: white; }
+    </style>
+</head>
+
+<body>
+
+<h1>Nuovo Ordine</h1>
+
+<div class="form">
+    <input type="text" id="destinatario" placeholder="Destinatario">
+
+    <input type="date" id="scadenza">
+
+    <button class="btn-save" onclick="salvaOrdine()">Salva Ordine</button>
+    <button class="btn-back" onclick="indietro()">Indietro</button>
+</div>
+
+<script>
+    const { createClient } = supabase;
+
+    const db = createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    async function salvaOrdine() {
+        const destinatario = document.getElementById("destinatario").value.trim();
+        const scadenza = document.getElementById("scadenza").value;
+        const stato = "IN PREPARAZIONE"
+
+        if (!destinatario || !scadenza) {
+            alert("Compila tutti i campi");
+            return;
+        }
+
+        const { error } = await db
+            .from("ordini")
+            .insert([{ destinatario, scadenza_consegna: scadenza, stato }]);
+
+        if (error) {
+            alert("Errore salvando ordine: " + error.message);
+            return;
+        }
+
+        window.location.href = "page_ordini.html";
+    }
+
+    function indietro() {
+        window.history.back();
+    }
+</script>
+
+</body>
+</html>
