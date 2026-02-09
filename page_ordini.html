@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordini</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #f5f5f5;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        select, input[type="text"], input[type="date"] {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #222;
+            color: #f5f5f5;
+        }
+
+        .table-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #222;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #2a2a2a;
+            cursor: pointer;
+        }
+
+        .buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .btn-add { background: #5cb85c; color: white; }
+        .btn-del { background: #d9534f; color: white; }
+    </style>
+</head>
+
+<body>
+
+<h1>Ordini</h1>
+
+<div class="filters">
+    <input type="text" id="filtro_destinatario" placeholder="Filtra per destinatario..." oninput="filterOrdini()">
+    <select id="filtro_stato" onchange="filterOrdini()">
+        <option value="">Tutti gli stati</option>
+        <option value="In preparazione">In preparazione</option>
+        <option value="Consegnato">Consegnato</option>
+        <option value="In attesa">In attesa</option>
+    </select>
+    <input type="date" id="filtro_data" onchange="filterOrdini()">
+</div>
+
+<div class="table-container">
+    <table id="table_ordini">
+        <thead>
+            <tr>
+                <th>Destinatario</th>
+                <th>Scadenza Consegna</th>
+                <th>Stato</th>
+       
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="buttons">
+    <button class="btn-add" onclick="vaiAggiungiOrdine()">Aggiungi Ordine</button>
+    <button class="btn-del" onclick="eliminaOrdine()">Elimina Ordine</button>
+</div>
+
+<script>
+    const { createClient } = supabase;
+
+    const db = createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    let ordiniCache = [];
+    let ordineSelezionato = null;
+
+    window.onload = async () => {
+        await loadOrdini();
+    };
+
+    async function loadOrdini() {
+        const { data, error } = await db
+            .from("ordini")
+            .select("*")
+            .order("scadenza_consegna", { ascending: true });
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        ordiniCache = data;
+        renderOrdini();
+    }
+
+    function renderOrdini() {
+        const tbody = document.querySelector("#table_ordini tbody");
+        tbody.innerHTML = "";
+
+        const fDest = document.getElementById("filtro_destinatario").value.toLowerCase();
+        const fStato = document.getElementById("filtro_stato").value;
+        const fData  = document.getElementById("filtro_data").value;
+
+        ordiniCache
+            .filter(o => !fDest || o.destinatario.toLowerCase().includes(fDest))
+            .filter(o => !fStato || o.stato === fStato)
+            .filter(o => !fData || o.scadenza_consegna === fData)
+            .forEach(row => {
+                const tr = document.createElement("tr");
+
+                tr.onclick = () => {
+                    ordineSelezionato = row;
+                    evidenziaRiga(tr);
+                };
+
+                tr.ondblclick = () => apriDettaglioOrdine(row.id);
+
+                tr.innerHTML = `
+                    <td>${row.destinatario}</td>
+                    <td>${row.scadenza_consegna}</td>
+                    <td>${row.stato}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+    }
+
+    function filterOrdini() {
+        renderOrdini();
+    }
+
+    function evidenziaRiga(trSel) {
+        document.querySelectorAll("#table_ordini tbody tr").forEach(tr => {
+            tr.style.backgroundColor = "";
+        });
+        trSel.style.backgroundColor = "#444";
+    }
+
+    function vaiAggiungiOrdine() {
+        window.location.href = "page_aggiungi_ordine.html";
+    }
+
+    async function eliminaOrdine() {
+        if (!ordineSelezionato) {
+            alert("Seleziona un ordine");
+            return;
+        }
+
+        if (!confirm("Vuoi eliminare l'ordine di " + ordineSelezionato.destinatario + "?")) return;
+
+        const { error } = await db
+            .from("ordini")
+            .delete()
+            .eq("id", ordineSelezionato.id);
+
+        if (error) {
+            alert("Errore eliminando ordine");
+            return;
+        }
+
+        ordineSelezionato = null;
+        loadOrdini();
+    }
+
+    function apriDettaglioOrdine(idOrdine) {
+        window.location.href = "page_ordine_dettaglio.html?id=" + idOrdine;
+    }
+</script>
+
+</body>
+</html>
