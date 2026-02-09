@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorazioni Prodotto</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #f5f5f5;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #222;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #2a2a2a;
+            cursor: pointer;
+        }
+
+        td[contenteditable="true"] {
+            background: #1b1b1b;
+        }
+
+        img {
+            max-width: 80px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .btn-back { background: #5bc0de; color: white; }
+        .btn-add  { background: #5cb85c; color: white; }
+        .btn-edit { background: #f0ad4e; color: white; }
+        .btn-del  { background: #d9534f; color: white; }
+    </style>
+</head>
+
+<body>
+
+<h1>Colorazioni</h1>
+
+<div class="table-container">
+    <table id="table_colori">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Descrizione</th>
+                <th>Immagine</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="buttons">
+    <button class="btn-back" onclick="indietro()">Indietro</button>
+    <button class="btn-add" onclick="aggiungiColorazione()">Aggiungi</button>
+    <button class="btn-edit" onclick="modificaImmagine()">Modifica Immagine</button>
+    <button class="btn-del" onclick="eliminaColorazione()">Elimina</button>
+</div>
+
+<script>
+    const { createClient } = supabase;
+
+    const db = createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    const BASE_IMG_URL = "https://ixarnqyrsonhshkctcki.supabase.co/storage/v1/object/public/Immagini/";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const prodottoID = urlParams.get("id");
+
+    let colorazioniCache = [];
+    let selezionata = null;
+
+    window.onload = () => {
+        loadColorazioni();
+    };
+
+    async function loadColorazioni() {
+        const { data, error } = await db
+            .from("colorazioni")
+            .select("*")
+            .eq("prodotto_id", prodottoID)
+            .order("id", { ascending: true });
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        colorazioniCache = data;
+        renderColorazioni();
+    }
+
+    function renderColorazioni() {
+        const tbody = document.querySelector("#table_colori tbody");
+        tbody.innerHTML = "";
+
+        colorazioniCache.forEach(row => {
+            const tr = document.createElement("tr");
+
+            tr.onclick = () => {
+                selezionata = row;
+                evidenziaRiga(tr);
+            };
+
+            const imgUrl = BASE_IMG_URL + row.id + ".png";
+
+            tr.innerHTML = `
+                <td>${row.id}</td>
+                <td contenteditable="true" onblur="updateDescrizione('${row.id}', this.innerText)">
+                    ${row.descrizione || ""}
+                </td>
+                <td><img src="${imgUrl}"></td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function evidenziaRiga(trSel) {
+        document.querySelectorAll("#table_colori tbody tr").forEach(tr => {
+            tr.style.backgroundColor = "";
+        });
+        trSel.style.backgroundColor = "#444";
+    }
+
+    async function updateDescrizione(id, value) {
+        const descrizione = value.trim();
+
+        const { error } = await db
+            .from("colorazioni")
+            .update({ descrizione })
+            .eq("id", id);
+
+        if (error) {
+            alert("Errore aggiornando descrizione");
+            loadColorazioni();
+        }
+    }
+
+    function indietro() {
+        window.history.back();
+    }
+
+    function aggiungiColorazione() {
+        window.location.href = "page_aggiungi_colorazione.html?id=" + prodottoID;
+    }
+
+    function modificaImmagine() {
+        if (!selezionata) {
+            alert("Seleziona una colorazione");
+            return;
+        }
+
+        window.location.href = "page_modifica_immagine.html?id=" + selezionata.id;
+    }
+
+    async function eliminaColorazione() {
+        if (!selezionata) {
+            alert("Seleziona una colorazione");
+            return;
+        }
+
+        if (!confirm("Vuoi eliminare " + selezionata.id + "?")) return;
+
+        const { error } = await db
+            .from("colorazioni")
+            .delete()
+            .eq("id", selezionata.id);
+
+        if (error) {
+            alert("Errore eliminando colorazione");
+            return;
+        }
+
+        selezionata = null;
+        loadColorazioni();
+    }
+</script>
+
+</body>
+</html>
