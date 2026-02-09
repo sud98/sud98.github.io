@@ -92,7 +92,7 @@
 
     async function aggiungiDettaglioOrdine() {
         const nuovaVendita = {
-            ordineID : ordineID,
+            ordineid : ordineID,
             colorazioneid: document.getElementById("descrizione").value,
             prezzo: document.getElementById("prezzo").value,
             preparato: false,
@@ -101,7 +101,7 @@
 
         // Inserimento su Supabase
         const { data, error } = await client
-            .from("ordine_dattaglio")
+            .from("ordine_dettaglio")
             .insert([nuovaVendita]);
 
         if (error) {
