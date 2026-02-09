@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dettaglio Ordine</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #f5f5f5;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #ordine_info {
+            background:#222;
+            padding:15px;
+            border-radius:8px;
+            margin-bottom:20px;
+            border:1px solid #333;
+            font-size: 18px;
+        }
+
+        #ordine_info p {
+            margin: 5px 0;
+        }
+
+        .table-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #222;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        th {
+            background: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #2a2a2a;
+            cursor: pointer;
+        }
+
+        td.img-cell img {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: contain;
+            display: block;
+            margin: auto;
+        }
+
+        .flag-btn {
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .flag-true {
+            color: #5cb85c;
+        }
+
+        .flag-false {
+            color: #d9534f;
+        }
+
+        td[contenteditable="true"] {
+            background: #1b1b1b;
+            border-radius: 4px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .btn-back { background: #5bc0de; color: white; }
+        .btn-add  { background: #5cb85c; color: white; }
+        .btn-del  { background: #d9534f; color: white; }
+    </style>
+</head>
+
+<body>
+
+<h1>Dettaglio Ordine</h1>
+
+<div id="ordine_info">
+    <p><strong>Destinatario:</strong> <span id="info_destinatario"></span></p>
+    <p><strong>Scadenza consegna:</strong> <span id="info_scadenza"></span></p>
+    <p><strong>Stato:</strong> <span id="info_stato"></span></p>
+</div>
+
+<div class="table-container">
+    <table id="table_dettaglio">
+        <thead>
+            <tr>              
+                <th>Prodotto</th>
+                <th>Prezzo</th>
+                <th>Immagine</th>
+                <th>Preparato</th>
+                <th>Consegnato</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="buttons">
+    <button class="btn-add" onclick="aggiungiRiga()">Aggiungi Prodotto</button>
+    <button class="btn-del" onclick="eliminaRiga()">Elimina Riga</button>
+    <button class="btn-back" onclick="indietro()">Indietro</button>
+</div>
+
+<script>
+    const { createClient } = supabase;
+
+    const db = createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const ordineID = urlParams.get("id");
+
+    let righeCache = [];
+    let selezionata = null;
+    let destinatarioOrdine = "";
+
+    window.onload = () => {
+        loadOrdineInfo();
+        loadDettaglio();
+    };
+
+    async function loadOrdineInfo() {
+        const { data } = await db
+            .from("ordini")
+            .select("*")
+            .eq("id", ordineID)
+            .single();
+
+        destinatarioOrdine = data.destinatario;
+
+        document.getElementById("info_destinatario").innerText = data.destinatario;
+        document.getElementById("info_scadenza").innerText = data.scadenza_consegna;
+        document.getElementById("info_stato").innerText = data.stato;
+    }
+
+    async function loadDettaglio() {
+        const { data } = await db
+            .from("ordine_dettaglio")
+            .select("*")
+            .eq("ordineid", ordineID);
+
+        righeCache = data;
+        renderDettaglio();
+    }
+
+    async function renderDettaglio() {
+        const tbody = document.querySelector("#table_dettaglio tbody");
+        tbody.innerHTML = "";
+
+        for (const row of righeCache) {
+
+            let imgTag = "";
+            const { data: colore } = await db
+                .from("colorazioni")
+                .select("percorsoimmagine")
+                .eq("id", row.colorazioneid)
+                .single();
+
+            if (colore && colore.percorsoimmagine) {
+                imgTag = `<img src="${colore.percorsoimmagine}">`;
+            }
+
+            const tr = document.createElement("tr");
+
+            tr.onclick = () => {
+                selezionata = row;
+                evidenziaRiga(tr);
+            };
+
+            tr.innerHTML = `
+                <td>${row.colorazioneid}</td>
+
+                <td contenteditable="true" 
+                    onblur="updatePrezzo('${row.id}', this.innerText)">
+                    ${row.prezzo}
+                </td>
+
+                <td class="img-cell">${imgTag}</td>
+
+                <td class="flag-btn ${row.preparato ? 'flag-true' : 'flag-false'}"
+                    onclick="togglePreparato('${row.id}', ${row.preparato})">
+                    ${row.preparato ? '✔' : '✘'}
+                </td>
+
+                <td class="flag-btn ${row.consegnato ? 'flag-true' : 'flag-false'}"
+                    onclick="toggleConsegnato('${row.id}', ${row.consegnato}, '${row.colorazioneid}', ${row.prezzo})">
+                    ${row.consegnato ? '✔' : '✘'}
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        }
+    }
+
+    function evidenziaRiga(trSel) {
+        document.querySelectorAll("#table_dettaglio tbody tr").forEach(tr => {
+            tr.style.backgroundColor = "";
+        });
+        trSel.style.backgroundColor = "#444";
+    }
+
+    async function updatePrezzo(id, value) {
+        const prezzo = parseFloat(value.replace(",", "."));
+
+        if (isNaN(prezzo) || prezzo < 0) {
+            alert("Prezzo non valido");
+            loadDettaglio();
+            return;
+        }
+
+        await db.from("ordine_dettaglio")
+            .update({ prezzo })
+            .eq("id", id);
+
+        loadDettaglio();
+    }
+
+    async function togglePreparato(id, currentValue) {
+        const newValue = !currentValue;
+        await db.from("ordine_dettaglio").update({ preparato: newValue }).eq("id", id);
+        loadDettaglio();
+    }
+
+    async function toggleConsegnato(id, currentValue, colorazioneid, prezzo) {
+        const newValue = !currentValue;
+
+        await db.from("ordine_dettaglio").update({ consegnato: newValue }).eq("id", id);
+
+        if (newValue === true) {
+            // ✔ CONSEGNATO → INSERISCO VENDITA
+            await inserisciVendita(colorazioneid, prezzo);
+        } else {
+            // ✘ NON CONSEGNATO → RIMUOVO L'ULTIMA VENDITA
+            await rimuoviVendita(colorazioneid, prezzo);
+        }
+
+        loadDettaglio();
+    }
+
+    async function inserisciVendita(colorazioneid, prezzo) {
+        const now = new Date().toISOString();
+
+        await db.from("vendite").insert([
+            {
+                colorazioneid,
+                prezzo,
+                data: now,
+                destinatario: destinatarioOrdine
+            }
+        ]);
+    }
+
+    async function rimuoviVendita(colorazioneid, prezzo) {
+        // Trova la vendita più recente
+        const { data } = await db
+            .from("vendite")
+            .select("*")
+            .eq("colorazioneid", colorazioneid)
+            .eq("destinatario", destinatarioOrdine)
+            .eq("prezzo", prezzo)
+            .order("data", { ascending: false })
+            .limit(1);
+
+        if (data && data.length > 0) {
+            await db.from("vendite").delete().eq("id", data[0].id);
+        }
+    }
+
+    function aggiungiRiga() {
+        window.location.href = "page_aggiungi_dettaglio_ordine.html?id=" + ordineID;
+    }
+
+    async function eliminaRiga() {
+        if (!selezionata) {
+            alert("Seleziona una riga");
+            return;
+        }
+        await db.from("ordine_dettaglio").delete().eq("id", selezionata.id);
+        selezionata = null;
+        loadDettaglio();
+    }
+
+    function indietro() {
+        window.history.back();
+    }
+</script>
+
+
+</body>
+</html>
