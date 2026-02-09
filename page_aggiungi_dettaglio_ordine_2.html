@@ -60,7 +60,7 @@
 <body>
 
 <div class="container">
-    <button class="arrow left" onclick="window.location.href='page_aggiungi_dettaglio_ordine.htmlid='" + idOrdine>&#8594;</button>
+    <button class="arrow left" onclick="indietro()">&#8592;</button>
     <h2>Aggiungi Vendita</h2>
 
     <form id="formAcquisto">
@@ -80,9 +80,6 @@
 </div>
 
 <script>
-    // Autocompila la data
-    document.getElementById("data").value = new Date().toISOString().split("T")[0];
-
     // Inizializza Supabase
     const { createClient } = supabase;
     const client = createClient(
@@ -91,13 +88,13 @@
     );
 
     const urlParams = new URLSearchParams(window.location.search);
-    const idOrdine = urlParams.get("id");
+    const ordineID = urlParams.get("id");
 
     async function aggiungiDettaglioOrdine() {
         const nuovaVendita = {
-            idOrdine : idOrdine,
+            ordineID : ordineID,
             colorazioneid: document.getElementById("descrizione").value,
-            prezzo: item.prezzo,
+            prezzo: document.getElementById("prezzo").value,
             preparato: false,
             consegnato: false
         };
@@ -113,11 +110,15 @@
         }
 
         // Se tutto ok → torna alla pagina acquisti
-        window.location.href = "page_ordine_dettaglio.html";
+        window.location.href = "page_ordine_dettaglio.html?id=" + ordineID;
+    }
+
+    function indietro() {
+        window.location.href = "page_aggiungi_dettaglio_ordine.html?id=" + ordineID;
     }
 
     function annulla() {
-        window.location.href = "page_ordine_dettaglio.html";
+        window.location.href = "page_ordine_dettaglio.html?id=" + ordineID;
     }
 </script>
 
