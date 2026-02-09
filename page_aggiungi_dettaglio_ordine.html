@@ -220,7 +220,9 @@
 <body>
     <div class="section-title">
         <h1>Seleziona un Prodotto</h1>
-        <button class="arrow right" onclick="window.location.href='page_aggiungi_dettaglio_ordine_2.htmlid='" + idOrdine>&#8594;</button>
+        <button class="arrow right" onclick="aggiungidettaglioordine2()"> &#8594;
+</button>
+
     </div>
 
     <div class="section-prodotti">
@@ -241,7 +243,7 @@
 
     <div class="section-bottoni">
         <button onclick="confermaDettaglioOrdine()">Conferma</button>
-        <button onclick="window.location.href='page_ordine_dettaglio.html'+ idOrdine">Annulla</button>
+        <button onclick="annulla()">Annulla</button>
     </div>
 
     <script>
@@ -251,7 +253,7 @@
         );
 
         const urlParams = new URLSearchParams(window.location.search);
-        const idOrdine = urlParams.get("id");
+        const ordineID = urlParams.get("id");
 
         let tutteLeColorazioni = [];
         let strutturaProdotto = null;
@@ -438,7 +440,7 @@
                 // ...creo N righe, dove N = quantità
                 for (let i = 0; i < item.quantita; i++) {
                     righeDaInserire.push({
-                        idOrdine : idOrdine,
+                        ordineID : ordineID,
                         colorazioneid: item.idColorazione,
                         prezzo: item.prezzo,
                         preparato: false,
@@ -461,7 +463,7 @@
             }
 
             // Tutto ok → torna alla pagina vendite
-            window.location.href = "page_ordine_dettaglio.html" + idOrdine;
+            window.location.href = "page_ordine_dettaglio.html?id=" + ordineID;
         }
 
         document.addEventListener("click", function (e) {
@@ -481,9 +483,14 @@
             document.getElementById("dataVendita").value = oggi;
         }
 
-        function aggiungiRiga() {
-        window.location.href = "page_aggiungi_dettaglio_ordine.html?id=" + ordineID;
-    }
+        function annulla() {
+            window.location.href = "page_ordine_dettaglio.html?id=" + ordineID;
+        }
+
+        function aggiungidettaglioordine2() {
+            window.location.href = "page_aggiungi_dettaglio_ordine_2.html?id=" + ordineID;
+        }
+        
     </script>
 
 </body>
