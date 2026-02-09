@@ -8,18 +8,23 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        /* --- STILE GENERALE --- */
         body {
             font-family: Arial, sans-serif;
             background: #111;
             color: #f5f5f5;
             padding: 20px;
+            margin: 0;
         }
 
+        /* --- TITOLO --- */
         h1 {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            font-size: 26px;
         }
 
+        /* --- FORM CONTAINER --- */
         .form {
             max-width: 500px;
             margin: auto;
@@ -28,25 +33,65 @@
             gap: 15px;
         }
 
+        /* --- INPUT E SELECT --- */
         input, select {
             padding: 10px;
             border-radius: 6px;
             border: 1px solid #444;
             background: #222;
             color: #fff;
+            font-size: 17px;
+            box-sizing: border-box; /* evita sbordi */
         }
 
+        /* --- BOTTONI --- */
         button {
             padding: 12px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
         }
 
-        .btn-save { background: #5cb85c; color: white; }
-        .btn-back { background: #5bc0de; color: white; }
+        .btn-save {
+            background: #5cb85c;
+            color: white;
+        }
+
+        .btn-back {
+            background: #5bc0de;
+            color: white;
+        }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+
+            input, select {
+                font-size: 16px;
+                padding: 9px;
+            }
+
+            button {
+                width: 100%;
+                padding: 14px;
+                font-size: 17px;
+            }
+
+            .form {
+                gap: 12px;
+            }
+        }
+
     </style>
 </head>
 

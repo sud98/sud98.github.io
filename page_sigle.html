@@ -8,62 +8,88 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        /* --- STILE GENERALE --- */
         body {
             font-family: Arial, sans-serif;
-            background: #222;
-            color: white;
+            background: #111;
+            color: #f5f5f5;
             padding: 20px;
+            margin: 0;
         }
 
+        /* --- LAYOUT A 3 COLONNE --- */
         .container {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
         }
 
+        /* --- BOX --- */
         .box {
-            background: #333;
-            padding: 20px;
+            background: #1b1b1b;
+            padding: 18px;
             border-radius: 10px;
+            border: 1px solid #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.4);
         }
 
+        /* --- TITOLI --- */
         h2 {
             margin-top: 0;
             text-align: center;
+            font-size: 22px;
+            font-weight: bold;
         }
 
+        /* --- TABELLE --- */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            background: #444;
+            margin-top: 12px;
+            background: #222;
             border-radius: 6px;
             overflow: hidden;
+            table-layout: fixed;
         }
 
         th, td {
-            padding: 10px;
-            border-bottom: 1px solid #555;
+            padding: 8px;
+            border-bottom: 1px solid #333;
+            font-size: 15px;
+            word-wrap: break-word;
+            white-space: normal;
         }
 
+        th {
+            background: #333;
+            font-weight: bold;
+        }
+
+        /* --- INPUT E SELECT --- */
         input, select {
             width: 100%;
             padding: 10px;
-            margin-top: 5px;
+            margin-top: 6px;
             border-radius: 6px;
-            border: none;
+            border: 1px solid #444;
+            background: #222;
+            color: #fff;
+            font-size: 15px;
+            box-sizing: border-box;
         }
 
+        /* --- RIGHE DI INPUT --- */
         .row {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 12px;
         }
 
         .row > div {
             flex: 1;
         }
 
+        /* --- BOTTONI --- */
         .buttons {
             display: flex;
             gap: 10px;
@@ -72,15 +98,80 @@
 
         button {
             flex: 1;
-            padding: 10px;
+            padding: 10px 16px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 15px;
         }
 
-        .btn-add { background: #4CAF50; color: white; }
-        .btn-del { background: #d9534f; color: white; }
+        .btn-add {
+            background: #5cb85c;
+            color: white;
+        }
+
+        .btn-del {
+            background: #d9534f;
+            color: white;
+        }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+
+            .container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            th, td {
+                padding: 6px;
+                font-size: 14px;
+            }
+
+            input, select {
+                padding: 9px;
+                font-size: 14px;
+            }
+
+            .row {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            button {
+                width: 100%;
+                padding: 14px;
+                font-size: 16px;
+            }
+        }
+        
+        /* Pulsante freccia indietro */
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            background: #1b1b1b;
+            color: #5bc0de;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            z-index: 999;
+            transition: 0.2s;
+        }
+
+        .back-button:hover {
+            background: #2a2a2a;
+            color: #ffffff;
+        }
+        
     </style>
 </head>
 
@@ -92,6 +183,7 @@
          COLONNA PRODOTTI
     ============================= -->
     <div class="box">
+        <div class="back-button" onclick="window.location.href = 'index.html'">←</div>
         <h2>Prodotti</h2>
 
         <input id="filter_prodotti" placeholder="Filtra..." oninput="filterProdotti()">

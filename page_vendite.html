@@ -7,21 +7,26 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* --- STILE GENERALE --- */
         body {
-            font-family: Arial;
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #f5f5f5;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* Sezioni verticali */
+        /* --- SEZIONI VERTICALI --- */
         .section-title {
-            flex: 0 0 8%;
+            flex: 0 0 7%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
         }
 
         .section-table {
@@ -32,89 +37,96 @@
         }
 
         .section-buttons {
-            flex: 0 0 8%;
+            flex: 0 0 10%;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
         }
 
-        /* Contenitore scrollabile */
+        /* --- CONTENITORE SCROLLABILE --- */
         .scroll-box {
             flex: 1;
             width: 95%;
             margin: auto;
             overflow-y: auto;
-            border: 2px solid #444;
+            border: 1px solid #333;
             border-radius: 8px;
             padding: 10px;
+            background: #1b1b1b;
         }
 
-        /* Pulsanti */
+        /* --- BOTTONI --- */
         .btn {
-            height: 90%;
-            width: 40%;
-            font-size: 18px;
+            width: 38%;
+            height: 50px;
+            font-size: 16px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
             color: white;
         }
 
         .btn-add { background-color: #28a745; }
         .btn-del { background-color: #dc3545; }
 
-        /* Tabella */
+        /* --- TABELLA --- */
         table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 18px;
+            font-size: 16px;
+            table-layout: fixed;
+            background: #222;
         }
 
         th, td {
-            border: 1px solid #444;
-            padding: 10px 20px;
+            border: 1px solid #333;
+            padding: 8px;
+            vertical-align: middle;
+            word-wrap: break-word;
+            white-space: normal;
         }
 
         th {
-            background-color: #eee;
-        }
-
-        /* Nascondo la colonna ID */
-        td:nth-child(5), th:nth-child(5) {
-            display: none;
+            background-color: #333;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 5;
         }
 
         /* Riga selezionata */
         tr.selezionata {
-            background-color: #ffe08a;
+            background-color: #444;
         }
 
-        /* Colonna immagini grande come nell’altra tabella */
-        td:nth-last-child,
-        th:nth-last-child {
-            max-height: 5px;
-            width: 150px;
+        /* Nascondo colonna ID */
+        td:nth-child(5),
+        th:nth-child(5) {
+            display: none;
         }
 
-        /* Immagini grandi e proporzionate */
-        td:nth-last-child img {
-            height: 100%;
-            width: auto;
+        /* Colonna immagini */
+        td:last-child,
+        th:last-child {
+            width: 140px;
+        }
+
+        td:last-child img {
+            width: 100%;
+            max-height: 110px;
             object-fit: contain;
             display: block;
-            margin: 0 auto;
+            margin: auto;
         }
 
-        td { 
-            height: 40px; /* o 30px, o 25px */ 
+        /* Altezza righe */
+        td {
+            height: 40px;
         }
 
-        img { 
-            max-width: 200px; 
-        }
-
-        /* Centra il testo nella colonna Prezzo */
+        /* Centra prezzo e quantità */
         td:nth-child(3),
         th:nth-child(3),
         td:nth-child(4),
@@ -122,6 +134,59 @@
             text-align: center;
         }
 
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 6px;
+            }
+
+            td:last-child img {
+                max-height: 80px;
+            }
+
+            .btn {
+                width: 90%;
+                height: 50px;
+                font-size: 17px;
+            }
+
+            .section-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* Pulsante freccia indietro */
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            background: #1b1b1b;
+            color: #5bc0de;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            z-index: 999;
+            transition: 0.2s;
+        }
+
+        .back-button:hover {
+            background: #2a2a2a;
+            color: #ffffff;
+        }
+        
     </style>
 </head>
 
@@ -129,6 +194,7 @@
 
     <!-- SEZIONE TITOLO -->
     <div class="section-title">
+        <div class="back-button" onclick="window.location.href = 'index.html'">←</div>
         <h1>Tabella Vendite</h1>
     </div>
 

@@ -7,22 +7,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* --- STILE GENERALE --- */
         body {
-            font-family: Arial;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             height: 100vh;
             display: flex;
             flex-direction: column;
+            background: #111;
+            color: #f5f5f5;
         }
 
+        /* --- TITOLI SEZIONI --- */
         .section-title {
             flex: 0 0 8%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
         }
 
+        /* --- SEZIONE TABELLA --- */
         .section-table {
             flex: 1;
             display: flex;
@@ -30,69 +37,77 @@
             overflow: hidden;
         }
 
+        /* --- SEZIONE BOTTONI --- */
         .section-buttons {
             flex: 0 0 8%;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
         }
 
+        /* --- CONTENITORE SCROLLABILE --- */
         .scroll-box {
             flex: 1;
             width: 95%;
             margin: auto;
             overflow-y: auto;
-            border: 2px solid #444;
+            border: 1px solid #333;
             border-radius: 8px;
             padding: 10px;
+            background: #1b1b1b;
         }
 
+        /* --- BOTTONI --- */
         .btn {
-            height: 90%;
-            width: 40%;
-            font-size: 18px;
+            height: 45px;
+            width: 35%;
+            font-size: 16px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             color: white;
+            font-weight: bold;
         }
 
         .btn-add { background-color: #28a745; }
         .btn-del { background-color: #dc3545; }
 
+        /* --- TABELLA --- */
         table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 18px;
+            font-size: 16px;
             table-layout: fixed;
+            background: #222;
         }
 
         th, td {
-            border: 1px solid #444;
-            padding: 10px 20px;
+            border: 1px solid #333;
+            padding: 6px 8px;
+            word-wrap: break-word;
+            white-space: normal;
         }
 
         th {
-            background-color: #eee;
+            background-color: #333;
+            font-weight: bold;
         }
 
-        /* Nascondo la colonna ID */
-        td:nth-child(1), th:nth-child(1) {
-            display: none;
-        }
-
+        /* Riga selezionata */
         tr.selezionata {
-            background-color: #ffe08a;
+            background-color: #444;
         }
 
+        /* Allineamenti */
         td:nth-child(3), th:nth-child(3),
         td:nth-child(4), th:nth-child(4) {
             text-align: center;
         }
 
+        /* Link */
         a {
-            color: #0077cc;
+            color: #5bc0de;
             text-decoration: none;
         }
 
@@ -108,13 +123,11 @@
         /* Colonna 3: prezzo */
         td:nth-child(3), th:nth-child(3) {
             width: 10%;
-            text-align: center;
         }
 
         /* Colonna 4: data */
         td:nth-child(4), th:nth-child(4) {
             width: 10%;
-            text-align: center;
         }
 
         /* Colonna 5: negozio */
@@ -123,7 +136,6 @@
         }
 
         /* Colonna 6: link */
-        /* Colonna link: mostra solo una parte, niente scroll */
         td:nth-child(6) a {
             display: inline-block;
             max-width: 100%;
@@ -132,16 +144,72 @@
             text-overflow: ellipsis;
         }
 
+        /* Nascondo colonna ID */
+        td:nth-child(1), th:nth-child(1) {
+            display: none;
+        }
 
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
 
+            .section-title {
+                font-size: 18px;
+            }
 
+            table {
+                font-size: 14px;
+            }
 
+            th, td {
+                padding: 4px;
+                font-size: 14px;
+            }
+
+            .btn {
+                width: 80%;
+                height: 45px;
+                font-size: 16px;
+            }
+
+            .section-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .scroll-box {
+                padding: 6px;
+            }
+        }
+
+        /* Pulsante freccia indietro */
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            background: #1b1b1b;
+            color: #5bc0de;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            z-index: 999;
+            transition: 0.2s;
+        }
+
+        .back-button:hover {
+            background: #2a2a2a;
+            color: #ffffff;
+        }
+        
     </style>
 </head>
 
 <body>
 
     <div class="section-title">
+        <div class="back-button" onclick="window.location.href = 'index.html'">←</div>
         <h1>Tabella Acquisti</h1>
     </div>
 

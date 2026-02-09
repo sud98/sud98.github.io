@@ -34,12 +34,13 @@
         }
 
         .table-container {
-            max-height: 60vh;
-            overflow-y: auto;
+            height: 55vh;          /* altezza fissa */
+            overflow-y: auto;      /* scroll solo dentro la tabella */
             border: 1px solid #333;
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
 
         table {
             width: 100%;
@@ -111,6 +112,60 @@
         .btn-back { background: #5bc0de; color: white; }
         .btn-add  { background: #5cb85c; color: white; }
         .btn-del  { background: #d9534f; color: white; }
+
+        /* --- VERSIONE MOBILE COMPATTA --- */
+        @media (max-width: 768px) {
+
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 22px;
+                margin-bottom: 15px;
+            }
+
+            #ordine_info {
+                font-size: 16px;
+                padding: 12px;
+            }
+
+            table {
+                width: 100%;
+                table-layout: fixed; /* forza le colonne a stare dentro lo schermo */
+            }
+
+            th, td {
+                font-size: 14px;      /* testo più piccolo */
+                padding: 6px 4px;     /* meno spazio */
+                word-wrap: break-word; /* permette di andare a capo */
+                white-space: normal;   /* evita testo su una sola riga */
+            }
+
+            /* Riduce dimensione immagine */
+            td.img-cell img {
+                max-width: 90px;
+                max-height: 90px;
+            }
+
+            /* Icone ✔ ✘ più piccole */
+            .flag-btn {
+                font-size: 24px;
+            }
+
+            /* Pulsanti più comodi */
+            .buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                width: 100%;
+                padding: 14px;
+                font-size: 16px;
+            }
+        }
+
     </style>
 </head>
 

@@ -8,66 +8,86 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        /* --- STILE GENERALE --- */
         body {
             font-family: Arial, sans-serif;
             background: #111;
             color: #f5f5f5;
             padding: 20px;
+            margin: 0;
         }
 
+        /* --- TITOLO --- */
         h1 {
             text-align: center;
             margin-bottom: 20px;
+            font-size: 26px;
         }
 
+        /* --- CONTENITORE TABELLA --- */
         .table-container {
             max-height: 60vh;
             overflow-y: auto;
             border: 1px solid #333;
             border-radius: 8px;
             margin-bottom: 20px;
+            background: #1b1b1b;
         }
 
+        /* --- TABELLA --- */
         table {
             width: 100%;
             border-collapse: collapse;
             background: #222;
+            table-layout: fixed;
         }
 
         th, td {
-            padding: 10px;
+            padding: 8px;
             border-bottom: 1px solid #333;
+            font-size: 16px;
+            word-wrap: break-word;
+            white-space: normal;
         }
 
         th {
             background: #333;
             position: sticky;
             top: 0;
+            z-index: 5;
+            font-weight: bold;
         }
 
+        /* Hover riga */
         tr:hover {
             background: #2a2a2a;
             cursor: pointer;
         }
 
+        /* Celle editabili */
         td[contenteditable="true"] {
             background: #1b1b1b;
+            border-radius: 4px;
         }
 
+        /* Immagini */
         img {
-            max-width: 80px;
-            max-height: 80px;
+            max-width: 70px;
+            max-height: 70px;
             object-fit: contain;
+            display: block;
+            margin: auto;
         }
 
+        /* --- BOTTONI --- */
         .buttons {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         button {
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
@@ -79,6 +99,36 @@
         .btn-add  { background: #5cb85c; color: white; }
         .btn-edit { background: #f0ad4e; color: white; }
         .btn-del  { background: #d9534f; color: white; }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+
+            h1 {
+                font-size: 22px;
+            }
+
+            th, td {
+                padding: 6px;
+                font-size: 14px;
+            }
+
+            img {
+                max-width: 55px;
+                max-height: 55px;
+            }
+
+            .buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                width: 100%;
+                padding: 14px;
+                font-size: 17px;
+            }
+        }
+
     </style>
 </head>
 

@@ -82,10 +82,70 @@
 
         .btn-add { background: #5cb85c; color: white; }
         .btn-del { background: #d9534f; color: white; }
+
+        /* --- VERSIONE MOBILE COMPATTA --- */
+        @media (max-width: 768px) {
+
+            table {
+                width: 100%;
+                table-layout: fixed; /* forza le colonne a stare dentro lo schermo */
+            }
+
+            th, td {
+                font-size: 14px;      /* testo più piccolo */
+                padding: 6px 4px;     /* meno spazio */
+                word-wrap: break-word; /* permette di andare a capo */
+                white-space: normal;   /* evita testo su una sola riga */
+            }
+
+            .filters {
+                grid-template-columns: 1fr; /* filtri impilati */
+                gap: 8px;
+            }
+
+            select, input[type="text"], input[type="date"] {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                width: 100%;
+                font-size: 16px;
+                padding: 12px;
+            }
+        }
+
+        /* Pulsante freccia indietro */
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            background: #1b1b1b;
+            color: #5bc0de;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            z-index: 999;
+            transition: 0.2s;
+        }
+
+        .back-button:hover {
+            background: #2a2a2a;
+            color: #ffffff;
+        }
     </style>
 </head>
 
 <body>
+<div class="back-button" onclick="window.location.href = 'index.html'">←</div>
 
 <h1>Ordini</h1>
 

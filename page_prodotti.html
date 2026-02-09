@@ -8,53 +8,64 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        /* --- STILE GENERALE --- */
         body {
             font-family: Arial, sans-serif;
             background: #111;
             color: #f5f5f5;
             padding: 20px;
+            margin: 0;
         }
 
+        /* --- TITOLO --- */
         h1 {
             text-align: center;
             margin-bottom: 20px;
+            font-size: 26px;
         }
 
-        /* FILTRI */
+        /* --- FILTRI --- */
         .filters {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 15px;
         }
 
-        select, input[type="text"] {
-            padding: 8px;
+        select,
+        input[type="text"] {
+            padding: 10px;
             border-radius: 6px;
             border: 1px solid #444;
             background: #222;
-            color: #f5f5f5;
+            color: #fff;
+            font-size: 15px;
+            box-sizing: border-box;
         }
 
-        /* CONTENITORE SCROLLABILE */
+        /* --- CONTENITORE TABELLA --- */
         .table-container {
-            max-height: 80vh;
+            max-height: 75vh;
             overflow-y: auto;
             border: 1px solid #333;
             border-radius: 8px;
+            background: #1b1b1b;
         }
 
-        /* TABELLA */
+        /* --- TABELLA --- */
         table {
             width: 100%;
             border-collapse: collapse;
             background: #222;
+            table-layout: fixed;
         }
 
         th, td {
             padding: 8px 10px;
             border-bottom: 1px solid #333;
-            font-size: 14px;
+            font-size: 15px;
+            word-wrap: break-word;
+            white-space: normal;
         }
 
         th {
@@ -63,33 +74,40 @@
             position: sticky;
             top: 0;
             z-index: 2;
+            font-weight: bold;
         }
 
+        /* Hover riga */
         tr:hover {
             background: #2a2a2a;
             cursor: pointer;
         }
 
+        /* Celle editabili */
         td[contenteditable="true"] {
             background: #1b1b1b;
+            border-radius: 4px;
         }
 
+        /* Immagini */
         img {
-            max-width: 60px;
-            max-height: 60px;
+            max-width: 55px;
+            max-height: 55px;
             object-fit: contain;
+            display: block;
+            margin: auto;
         }
 
-        /* PULSANTI */
+        /* --- BOTTONI --- */
         .buttons {
             margin-top: 15px;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         button {
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
@@ -100,11 +118,75 @@
         .btn-brochure { background: #5bc0de; color: #fff; }
         .btn-add      { background: #5cb85c; color: #fff; }
         .btn-del      { background: #d9534f; color: #fff; }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .filters {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            select,
+            input[type="text"] {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            th, td {
+                padding: 6px;
+                font-size: 13px;
+            }
+
+            img {
+                max-width: 45px;
+                max-height: 45px;
+            }
+
+            .buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                width: 100%;
+                padding: 14px;
+                font-size: 17px;
+            }
+        }
+
+        /* Pulsante freccia indietro */
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            background: #1b1b1b;
+            color: #5bc0de;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            z-index: 999;
+            transition: 0.2s;
+        }
+
+        .back-button:hover {
+            background: #2a2a2a;
+            color: #ffffff;
+        }
+        
     </style>
 </head>
 
 <body>
 
+<div class="back-button" onclick="window.location.href = 'index.html'">←</div>
 <h1>Prodotti</h1>
 
 <!-- FILTRI -->

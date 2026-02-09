@@ -6,7 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* Layout verticale */
+        /* --- STILE GENERALE --- */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -14,66 +14,101 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            background: #111;
+            color: #f5f5f5;
         }
 
-        .section-title { flex: 0 0 5%; display: flex; align-items: center; justify-content: center; }
-        .section-prodotti { flex: 0 0 45%; overflow: hidden; display: flex; flex-direction: column; }
-        .section-carrello-title { flex: 0 0 5%; display: flex; align-items: center; justify-content: center; }
-        .section-carrello { flex: 0 0 25%; overflow: hidden; display: flex; flex-direction: column; }
-        .section-dati { flex: 0 0 10%; display: flex; align-items: center; justify-content: center; gap: 20px;}
-        .section-bottoni { flex: 0 0 10%; display: flex; align-items: center; justify-content: center; gap: 20px; }
+        /* --- TITOLI SEZIONI --- */
+        .section-title,
+        .section-carrello-title {
+            flex: 0 0 5%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
 
-        /* Contenitori scrollabili */
+        /* --- SEZIONI PRINCIPALI --- */
+        .section-prodotti {
+            flex: 0 0 45%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-carrello {
+            flex: 0 0 25%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-dati {
+            flex: 0 0 10%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+        }
+
+        .section-bottoni {
+            flex: 0 0 10%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* --- CONTENITORI SCROLLABILI --- */
         .scroll-box {
             flex: 1;
             width: 95%;
             margin: auto;
             overflow-y: auto;
-            border: 2px solid #444;
+            border: 1px solid #333;
             border-radius: 8px;
             padding: 10px;
+            background: #222;
         }
 
-        /* Tabella */
+        /* --- TABELLE --- */
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 18px;
+            table-layout: fixed; /* evita scroll orizzontale */
         }
 
-        /* Righe alte e senza padding verticale */
         table td, table th {
-            border: 1px solid #444;
-            min-height: 50px;
-            padding: 0 10px;     /* niente padding verticale */
+            border: 1px solid #333;
+            padding: 6px 8px;
             vertical-align: middle;
+            word-wrap: break-word;
+            white-space: normal;
         }
-
-        /* Altezza reale SOLO per la colonna immagini */
-        table td:nth-child(5) .color-select-display {
-            height: 120px;   /* scegli tu */
-        }
-
 
         /* Header sticky */
         thead th {
             position: sticky;
             top: 0;
-            background: #eee;
+            background: #333;
             z-index: 5;
         }
 
-        /* Immagini che riempiono la cella */
+        /* --- IMMAGINI --- */
         table td img {
-            height: 100%;
-            width: auto;
-            max-height: 100%;
+            width: 100%;
+            height: auto;
+            max-height: 120px;
             object-fit: contain;
             display: block;
-            margin: 0 auto;
+            margin: auto;
         }
 
-        /* Prime colonne strette */
+        /* --- COLONNE STRETTE --- */
         #tabellaprodotti td:nth-child(1),
         #tabellaprodotti th:nth-child(1),
         #tabellaprodotti td:nth-child(2),
@@ -86,11 +121,12 @@
         #tabellaprodotti th:nth-child(6) {
             width: 80px;
             max-width: 80px;
-            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
+        /* --- CARRELLO --- */
         #tabellaCarrello td:nth-child(1),
         #tabellaCarrello th:nth-child(1),
         #tabellaCarrello td:nth-child(2),
@@ -107,7 +143,7 @@
             width: 10%;
         }
 
-        /* Selettore colorazioni */
+        /* --- SELECTOR COLORAZIONI --- */
         .color-select {
             width: 100%;
             height: 100%;
@@ -122,10 +158,9 @@
         .color-select-display {
             width: 100%;
             height: 100%;
-            padding: 0;
             border: 1px solid #444;
             border-radius: 6px;
-            background: white;
+            background: #1b1b1b;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -143,19 +178,18 @@
             position: absolute;
             top: 100%;
             left: 50%;
-            transform: translateX(-50%);   /* centra il menu */
-            width: 50%;                  /* larghezza indipendente dalla colonna */
-            overflow-y: auto;              /* scroll verticale */
-            background: white;
+            transform: translateX(-50%);
+            width: 60%;
+            max-height: 250px;
+            overflow-y: auto;
+            background: #222;
             border: 1px solid #444;
             border-radius: 6px;
             padding: 5px;
             display: none;
-            flex-direction: column;        /* una sopra l’altra */
+            flex-direction: column;
             z-index: 1000;
-            pointer-events: auto;
         }
-
 
         .color-select-options img {
             width: 100%;
@@ -168,50 +202,100 @@
         }
 
         .color-select-options img:hover {
-            border-color: #4CAF50;
+            border-color: #5cb85c;
         }
 
-        /* Carrello */
-        #carrelloContainer input {
-            width: 60px;
-            font-size: 16px;
+        /* --- INPUT DATI --- */
+        .section-dati label {
+            font-weight: bold;
+            width: 20%;
         }
 
-        .btn-add {
-            width: 100px;
-            height: 100px;
-            font-size: 40px;
+        .section-dati input {
+            width: 40%;
+            padding: 8px 12px;
+            font-size: 18px;
+            border: 2px solid #444;
             border-radius: 6px;
-            cursor: pointer;
+            background: #1b1b1b;
+            color: #fff;
         }
 
+        /* --- BOTTONI --- */
         .section-bottoni button {
             width: 45%;
             height: 60px;
             font-size: 22px;
             border-radius: 8px;
-        }
-
-        .section-dati {
-            display: flex;
-            flex-direction: row;
-            gap: 10px;
-            padding: 10px 20px;
-            font-size: 18px;
-        }
-
-        .section-dati label {
+            border: none;
+            cursor: pointer;
             font-weight: bold;
-            width: 15%;
         }
 
-        .section-dati input {
-            width: 35%;
-            padding: 8px 12px;
-            font-size: 18px;
-            border: 2px solid #444;
-            border-radius: 6px;
+        .btn-add {
+            background: #5cb85c;
+            color: white;
         }
+
+        .btn-del {
+            background: #d9534f;
+            color: white;
+        }
+
+        .btn-back {
+            background: #5bc0de;
+            color: white;
+        }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+
+            .section-title,
+            .section-carrello-title {
+                font-size: 18px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            table td, table th {
+                padding: 4px;
+                font-size: 14px;
+            }
+
+            table td img {
+                max-height: 80px;
+            }
+
+            .section-dati {
+                flex-direction: column;
+                gap: 10px;
+                font-size: 16px;
+            }
+
+            .section-dati label,
+            .section-dati input {
+                width: 100%;
+            }
+
+            .section-bottoni {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .section-bottoni button {
+                width: 90%;
+                height: 55px;
+                font-size: 18px;
+            }
+
+            .scroll-box {
+                border-width: 1px;
+                padding: 6px;
+            }
+        }
+
 
     </style>
 </head>
