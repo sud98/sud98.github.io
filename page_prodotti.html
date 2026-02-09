@@ -242,33 +242,40 @@
             .filter(p => !fTema || p.tema === fTema)
             .filter(p => !fDesc || (p.descrizione || "").toLowerCase().includes(fDesc))
             .forEach(row => {
-                const tr = document.createElement("tr");
+            const tr = document.createElement("tr");
 
-                tr.onclick = () => {
-                    prodottoSelezionato = row;
-                    evidenziaRiga(tr);
-                };
+            // CLICK singolo → seleziona la riga
+            tr.onclick = () => {
+                prodottoSelezionato = row;
+                evidenziaRiga(tr);
+            };
 
-                const imgUrl = BASE_IMG_URL + row.id + "_01.png";
+            // DOPPIO CLICK → apre pagina colorazioni
+            tr.ondblclick = () => apriColorazioni(row.id);
 
-                tr.innerHTML = `
-                    <td>${row.id}</td>
-                    <td>${row.prodotto}</td>
-                    <td>${row.tipologia}</td>
-                    <td>${row.tema}</td>
-                    <td contenteditable="true"
-                        onblur="updateDescrizione('${row.id}', this.innerText)">
-                        ${row.descrizione || ""}
-                    </td>
-                    <td contenteditable="true"
-                        onblur="updatePrezzo('${row.id}', this.innerText)">
-                        ${row.prezzo ?? ""}
-                    </td>
-                    <td><img src="${imgUrl}" alt=""></td>
-                `;
+            const imgUrl = BASE_IMG_URL + row.id + "_01.png";
 
-                tbody.appendChild(tr);
-            });
+            tr.innerHTML = `
+                <td>${row.id}</td>
+                <td>${row.prodotto}</td>
+                <td>${row.tipologia}</td>
+                <td>${row.tema}</td>
+                <td contenteditable="true"
+                    onblur="updateDescrizione('${row.id}', this.innerText)">
+                    ${row.descrizione || ""}
+                </td>
+                <td contenteditable="true"
+                    onblur="updatePrezzo('${row.id}', this.innerText)">
+                    ${row.prezzo ?? ""}
+                </td>
+                <td><img src="${imgUrl}" alt=""></td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+
+    
+
     }
 
     function filterProdotti() {
@@ -352,6 +359,10 @@
 
     function creaBrochure() {
         console.log("Funzione brochure non ancora implementata");
+    }
+
+    function apriColorazioni(idProdotto) { 
+        window.location.href = "page_colorazioni.html?id=" + idProdotto;
     }
 </script>
 
