@@ -235,6 +235,7 @@
     }
 
     async function loadDettaglio() {
+        checkStatoOrdine();
         const { data } = await db
             .from("ordine_dettaglio")
             .select("*")
@@ -319,12 +320,19 @@
     async function togglePreparato(id, currentValue) {
         const newValue = !currentValue;
         await db.from("ordine_dettaglio").update({ preparato: newValue }).eq("id", id);
+        
+        //Aggiorno stato ordine
+        const { data: dettagli_ordine } = await db
+                .from("ordine_dettaglio")
+                .select("preparato")
+                .eq("ordineid", ordineID)
         loadDettaglio();
     }
 
     async function toggleConsegnato(id, currentValue, colorazioneid, prezzo) {
         const newValue = !currentValue;
-
+        if(newValue == true)
+            await db.from("ordine_dettaglio").update({ preparato: newValue }).eq("id", id);
         await db.from("ordine_dettaglio").update({ consegnato: newValue }).eq("id", id);
 
         if (newValue === true) {
@@ -333,9 +341,30 @@
         } else {
             // ✘ NON CONSEGNATO → RIMUOVO L'ULTIMA VENDITA
             await rimuoviVendita(colorazioneid, prezzo);
-        }
-
+        }           
         loadDettaglio();
+    }
+
+    async function checkStatoOrdine(){
+        //Aggiorno stato ordine
+        const { data: dettagli_ordine } = await db
+                .from("ordine_dettaglio")
+                .select("preparato,consegnato")
+                .eq("ordineid", ordineID)
+
+        // Verifica se TUTTI sono true 
+        const tuttiConsegnati = dettagli_ordine.every(r => r.consegnato === true)
+        if (tuttiConsegnati == true)
+            await db.from("ordini").update({ stato: "CONSEGNATO" }).eq("id", ordineID);
+        else
+        {
+            // Verifica se TUTTI sono true 
+            const tuttiPreparati = dettagli_ordine.every(r => r.preparato === true)
+            if (tuttiPreparati == true)
+                await db.from("ordini").update({ stato: "PREPARATO" }).eq("id", ordineID);
+            else
+                await db.from("ordini").update({ stato: "IN LAVORAZIONE" }).eq("id", ordineID);
+        }
     }
 
     async function inserisciVendita(colorazioneid, prezzo) {

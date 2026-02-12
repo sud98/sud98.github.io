@@ -141,6 +141,29 @@
             background: #2a2a2a;
             color: #ffffff;
         }
+        .stato-lavorazione {
+        background-color: #ff6b6b; /* rosso */
+        color: white;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 4px;
+        }
+
+        .stato-preparato {
+            background-color: #ffd93d; /* giallo */
+            color: black;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .stato-consegnato {
+            background-color: #51cf66; /* verde */
+            color: white;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 
@@ -239,6 +262,7 @@
 
                 tbody.appendChild(tr);
             });
+
     }
 
     function filterOrdini() {
