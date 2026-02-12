@@ -254,14 +254,21 @@
 
                 tr.ondblclick = () => apriDettaglioOrdine(row.id);
 
+                // --- AGGIUNTA CLASSE STATO ---
+                let classeStato = "";
+                if (row.stato === "IN LAVORAZIONE") classeStato = "stato-lavorazione";
+                else if (row.stato === "PREPARATO") classeStato = "stato-preparato";
+                else if (row.stato === "CONSEGNATO") classeStato = "stato-consegnato";
+
                 tr.innerHTML = `
                     <td>${row.destinatario}</td>
                     <td>${row.scadenza_consegna}</td>
-                    <td>${row.stato}</td>
+                    <td><span class="${classeStato}">${row.stato}</span></td>
                 `;
 
                 tbody.appendChild(tr);
             });
+
 
     }
 
