@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aggiungi Colorazione</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: #f5f5f5;
+        padding: 20px;
+        margin: 0;
+    }
+
+    .back-button {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        font-size: 28px;
+        font-weight: bold;
+        background: #1b1b1b;
+        color: #5bc0de;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 6px 12px;
+        cursor: pointer;
+        z-index: 999;
+        transition: 0.2s;
+    }
+    .back-button:hover {
+        background: #2a2a2a;
+        color: #7cd3f0;
+    }
+
+    .container {
+        max-width: 500px;
+        margin: auto;
+        background: #1b1b1b;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #333;
+        box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 26px;
+    }
+
+    label {
+        font-weight: bold;
+        display: block;
+        margin-top: 15px;
+        font-size: 18px;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 6px;
+        border-radius: 6px;
+        border: 1px solid #444;
+        background: #222;
+        color: #fff;
+        font-size: 17px;
+        box-sizing: border-box;
+    }
+
+    .buttons {
+        margin-top: 25px;
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    button {
+        padding: 12px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 17px;
+        font-weight: bold;
+        width: 48%;
+    }
+
+    .btn-add { background: #5cb85c; color: white; }
+    .btn-cancel { background: #d9534f; color: white; }
+</style>
+</head>
+
+<body>
+
+<div class="back-button" onclick="vaiAlMenu()">←</div>
+
+<div class="container">
+    <h2>Aggiungi Colorazione</h2>
+
+    <label>Descrizione</label>
+    <input type="text" id="descrizione" required>
+
+    <label>Immagine</label>
+    <input type="file" id="immagine" accept="image/*" required>
+
+    <div class="buttons">
+        <button class="btn-add" onclick="salvaColorazione()">Aggiungi</button>
+        <button class="btn-cancel" onclick="page_colorazioni()">Annulla</button>
+    </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+
+const db = createClient(
+    "https://ixarnqyrsonhshkctcki.supabase.co",
+    "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+);
+
+const urlParams = new URLSearchParams(window.location.search);
+const prodottoID = urlParams.get("id");
+
+function page_colorazioni() {
+    window.location.href = "page_colorazioni.html?id=" + prodottoID;;
+}
+
+async function salvaColorazione() {
+    const descrizione = document.getElementById("descrizione").value.trim();
+    const file = document.getElementById("immagine").files[0];
+
+    if (!descrizione || !file) {
+        alert("Compila tutti i campi");
+        return;
+    }
+
+    // 2️⃣ Calcolo il prossimo ID
+    const { data: existing } = await db
+        .from("colorazioni")
+        .select("id")
+        .eq("prodottoid", prodottoID);
+
+    const nextNumber = existing.length + 1;
+    const id = `${prodottoID}_${String(nextNumber).padStart(2, "0")}`;
+
+    // 3️⃣ Carico l'immagine su Supabase Storage
+    const filePath = `https://ixarnqyrsonhshkctcki.supabase.co/storage/v1/object/public/Immagini/${id}.png`;
+    const { error: uploadError } = await db.storage
+        .from("Immagini")
+        .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+        alert("Errore caricando immagine");
+        return;
+    }
+
+    // 4️⃣ Inserisco il record nella tabella
+    const { error: insertError } = await db
+        .from("colorazioni")
+        .insert({
+            id,
+            prodottoID,
+            descrizione,
+            percorsoimmagine: publicURL
+        });
+
+    if (insertError) {
+        alert("Errore salvando colorazione");
+        return;
+    }
+
+    alert("Colorazione aggiunta!");
+    window.history.back();
+}
+</script>
+
+</body>
+</html>

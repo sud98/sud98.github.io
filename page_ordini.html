@@ -48,6 +48,23 @@
             background: #222;
         }
 
+        /* Larghezze colonne tabella */
+        #table_ordini th:nth-child(1),
+        #table_ordini td:nth-child(1) {
+            width: 40%; /* Destinatario */
+        }
+
+        #table_ordini th:nth-child(2),
+        #table_ordini td:nth-child(2) {
+            width: 25%; /* Data (più stretta) */
+        }
+
+        #table_ordini th:nth-child(3),
+        #table_ordini td:nth-child(3) {
+            width: 35%; /* Stato (più larga) */
+            white-space: nowrap; /* evita l'andata a capo */
+        }
+
         th, td {
             padding: 10px;
             border-bottom: 1px solid #333;
@@ -90,6 +107,24 @@
                 width: 100%;
                 table-layout: fixed; /* forza le colonne a stare dentro lo schermo */
             }
+
+            /* Larghezze colonne tabella */
+            #table_ordini th:nth-child(1),
+            #table_ordini td:nth-child(1) {
+                width: 40%; /* Destinatario */
+            }
+
+            #table_ordini th:nth-child(2),
+            #table_ordini td:nth-child(2) {
+                width: 25%; /* Data (più stretta) */
+            }
+
+            #table_ordini th:nth-child(3),
+            #table_ordini td:nth-child(3) {
+                width: 35%; /* Stato (più larga) */
+                white-space: nowrap; /* evita l'andata a capo */
+            }
+
 
             th, td {
                 font-size: 14px;      /* testo più piccolo */

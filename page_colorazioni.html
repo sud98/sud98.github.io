@@ -180,7 +180,7 @@
         const { data, error } = await db
             .from("colorazioni")
             .select("*")
-            .eq("prodotto_id", prodottoID)
+            .eq("prodottoid", prodottoID)
             .order("id", { ascending: true });
 
         if (error) {
