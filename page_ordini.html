@@ -225,7 +225,7 @@
                 <th>Destinatario</th>
                 <th>Scadenza Consegna</th>
                 <th>Stato</th>
-       
+                <th>Pagato</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -299,12 +299,82 @@
                     <td>${row.destinatario}</td>
                     <td>${row.scadenza_consegna}</td>
                     <td><span class="${classeStato}">${row.stato}</span></td>
+                    <td class="flag-btn ${row.pagato ? 'flag-true' : 'flag-false'}"
+                    onclick="togglePagato('${row.id}', ${row.pagato})">
+                    ${row.pagato ? '✔' : '✘'} </td>
                 `;
 
                 tbody.appendChild(tr);
             });
 
 
+    }
+
+    async function togglePagato(id, currentValue) {
+    const newValue = !currentValue;
+
+    // 1️⃣ Aggiorno la tabella ORDINI
+    await db.from("ordini")
+        .update({ pagato: newValue })
+        .eq("id", id);
+
+    // 2️⃣ Prendo tutte le righe collegate nella tabella ORDINE_DETTAGLIO
+    const { data: dettagli, error } = await db
+        .from("ordine_dettaglio")
+        .select("*")
+        .eq("ordineid", id);
+
+    if (error) {
+        console.error("Errore nel recupero dei dettagli:", error);
+        return;
+    }
+
+    // 3️⃣ Aggiorno pagato anche in ordine_dettaglio
+    await db.from("ordine_dettaglio")
+        .update({ pagato: newValue })
+        .eq("ordineid", id);
+
+    // 4️⃣ Per ogni riga eseguo inserisciVendita o rimuoviVendita
+    for (const dett of dettagli) {
+        if (newValue === true) {
+            await inserisciVendita(dett.colorazioneid, dett.prezzo);
+        } else {
+            await rimuoviVendita(dett.colorazioneid, dett.prezzo);
+        }
+    }
+
+    // 5️⃣ Ricarico la UI
+    loadDettaglio();
+}
+
+
+    async function inserisciVendita(colorazioneid, prezzo) {
+        const now = new Date().toISOString();
+
+        await db.from("vendite").insert([
+            {
+                colorazioneid,
+                prezzo,
+                data: now,
+                destinatario: destinatarioOrdine
+            }
+        ]);
+    }
+
+    async function rimuoviVendita(colorazioneid, prezzo) {
+        // Trova la vendita più recente
+        const { data } = await db
+            .from("vendite")
+            .select("*")
+            .eq("colorazioneid", colorazioneid)
+            .eq("destinatario", destinatarioOrdine)
+            .eq("prezzo", prezzo)
+            .order("data", { ascending: false })
+            .limit(1);
+
+        if (data && data.length > 0) {
+            await db.from("vendite").delete().eq("id", data[0].id);
+        }
     }
 
     function filterOrdini() {

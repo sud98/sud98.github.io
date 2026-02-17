@@ -188,6 +188,7 @@
                 <th>Immagine</th>
                 <th>Preparato</th>
                 <th>Consegnato</th>
+                <th>Pagato</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -285,8 +286,13 @@
                 </td>
 
                 <td class="flag-btn ${row.consegnato ? 'flag-true' : 'flag-false'}"
-                    onclick="toggleConsegnato('${row.id}', ${row.consegnato}, '${row.colorazioneid}', ${row.prezzo})">
+                    onclick="toggleConsegnato('${row.id}', ${row.consegnato})">
                     ${row.consegnato ? '✔' : '✘'}
+                </td>
+
+                <td class="flag-btn ${row.pagato ? 'flag-true' : 'flag-false'}"
+                    onclick="togglePagato('${row.id}', ${row.pagato}, '${row.colorazioneid}', ${row.prezzo})">
+                    ${row.pagato ? '✔' : '✘'}
                 </td>
             `;
 
@@ -329,11 +335,18 @@
         loadDettaglio();
     }
 
-    async function toggleConsegnato(id, currentValue, colorazioneid, prezzo) {
+    async function toggleConsegnato(id, currentValue) {
         const newValue = !currentValue;
         if(newValue == true)
             await db.from("ordine_dettaglio").update({ preparato: newValue }).eq("id", id);
         await db.from("ordine_dettaglio").update({ consegnato: newValue }).eq("id", id);
+
+        loadDettaglio();
+    }
+
+    async function togglePagato(id, currentValue, colorazioneid, prezzo) {
+        const newValue = !currentValue;
+        await db.from("ordine_dettaglio").update({ pagato: newValue }).eq("id", id);
 
         if (newValue === true) {
             // ✔ CONSEGNATO → INSERISCO VENDITA
@@ -365,6 +378,10 @@
             else
                 await db.from("ordini").update({ stato: "IN LAVORAZIONE" }).eq("id", ordineID);
         }
+
+        const tuttiCPagati = dettagli_ordine.every(r => r.pagato === true)
+        if (tuttiConsegnati == true)
+            await db.from("ordini").update({ pagato: true }).eq("id", ordineID);
     }
 
     async function inserisciVendita(colorazioneid, prezzo) {
