@@ -379,9 +379,11 @@
                 await db.from("ordini").update({ stato: "IN LAVORAZIONE" }).eq("id", ordineID);
         }
 
-        const tuttiCPagati = dettagli_ordine.every(r => r.pagato === true)
-        if (tuttiConsegnati == true)
+        const tuttiPagati = dettagli_ordine.every(r => r.pagato === true)
+        if (tuttiPagati == true)
             await db.from("ordini").update({ pagato: true }).eq("id", ordineID);
+        else
+            await db.from("ordini").update({ pagato: false }).eq("id", ordineID);
     }
 
     async function inserisciVendita(colorazioneid, prezzo) {

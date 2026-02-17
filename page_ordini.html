@@ -70,6 +70,12 @@
             border-bottom: 1px solid #333;
         }
 
+        #table_ordini th,
+        #table_ordini td {
+            text-align: center;
+        }
+
+
         th {
             background: #333;
             position: sticky;
@@ -79,6 +85,14 @@
         tr:hover {
             background: #2a2a2a;
             cursor: pointer;
+        }
+
+        .flag-true {
+            color: #5cb85c;
+        }
+
+        .flag-false {
+            color: #d9534f;
         }
 
         .buttons {
@@ -111,17 +125,23 @@
             /* Larghezze colonne tabella */
             #table_ordini th:nth-child(1),
             #table_ordini td:nth-child(1) {
-                width: 40%; /* Destinatario */
+                width: 35%; /* Destinatario */
             }
 
             #table_ordini th:nth-child(2),
             #table_ordini td:nth-child(2) {
-                width: 25%; /* Data (più stretta) */
+                width: 30%; /* Data (più stretta) */
             }
 
             #table_ordini th:nth-child(3),
             #table_ordini td:nth-child(3) {
-                width: 35%; /* Stato (più larga) */
+                width: 25%; /* Stato (più larga) */
+                white-space: nowrap; /* evita l'andata a capo */
+            }
+
+            #table_ordini th:nth-child(4),
+            #table_ordini td:nth-child(4) {
+                width: 10%; /* Stato (più larga) */
                 white-space: nowrap; /* evita l'andata a capo */
             }
 
@@ -291,16 +311,17 @@
 
                 // --- AGGIUNTA CLASSE STATO ---
                 let classeStato = "";
-                if (row.stato === "IN LAVORAZIONE") classeStato = "stato-lavorazione";
-                else if (row.stato === "PREPARATO") classeStato = "stato-preparato";
-                else if (row.stato === "CONSEGNATO") classeStato = "stato-consegnato";
+                let testo_stato = "";
+                if (row.stato === "IN LAVORAZIONE") {classeStato = "stato-lavorazione"; testo_stato = "IN LAV";} 
+                else if (row.stato === "PREPARATO") {classeStato = "stato-preparato"; testo_stato = "PREP";}
+                else if (row.stato === "CONSEGNATO") {classeStato = "stato-consegnato"; testo_stato = "CONS";}
 
                 tr.innerHTML = `
                     <td>${row.destinatario}</td>
                     <td>${row.scadenza_consegna}</td>
-                    <td><span class="${classeStato}">${row.stato}</span></td>
+                    <td><span class="${classeStato}">${testo_stato}</span></td>
                     <td class="flag-btn ${row.pagato ? 'flag-true' : 'flag-false'}"
-                    onclick="togglePagato('${row.id}', ${row.pagato})">
+                    onclick="togglePagato('${row.id}', ${row.pagato}, '${row.destinatario}')">
                     ${row.pagato ? '✔' : '✘'} </td>
                 `;
 
@@ -310,45 +331,46 @@
 
     }
 
-    async function togglePagato(id, currentValue) {
-    const newValue = !currentValue;
+    async function togglePagato(id, currentValue, destinatarioOrdine) {
+        const newValue = !currentValue;
+       
+        // 1️⃣ Aggiorno la tabella ORDINI
+        await db.from("ordini")
+            .update({ pagato: newValue })
+            .eq("id", id);
 
-    // 1️⃣ Aggiorno la tabella ORDINI
-    await db.from("ordini")
-        .update({ pagato: newValue })
-        .eq("id", id);
+        // 2️⃣ Prendo tutte le righe collegate nella tabella ORDINE_DETTAGLIO
+        const { data: dettagli, error } = await db
+            .from("ordine_dettaglio")
+            .select("*")
+            .eq("ordineid", id);
 
-    // 2️⃣ Prendo tutte le righe collegate nella tabella ORDINE_DETTAGLIO
-    const { data: dettagli, error } = await db
-        .from("ordine_dettaglio")
-        .select("*")
-        .eq("ordineid", id);
-
-    if (error) {
-        console.error("Errore nel recupero dei dettagli:", error);
-        return;
-    }
-
-    // 3️⃣ Aggiorno pagato anche in ordine_dettaglio
-    await db.from("ordine_dettaglio")
-        .update({ pagato: newValue })
-        .eq("ordineid", id);
-
-    // 4️⃣ Per ogni riga eseguo inserisciVendita o rimuoviVendita
-    for (const dett of dettagli) {
-        if (newValue === true) {
-            await inserisciVendita(dett.colorazioneid, dett.prezzo);
-        } else {
-            await rimuoviVendita(dett.colorazioneid, dett.prezzo);
+        if (error) {
+            console.error("Errore nel recupero dei dettagli:", error);
+            return;
         }
+
+        // 3️⃣ Aggiorno pagato anche in ordine_dettaglio
+        await db.from("ordine_dettaglio")
+            .update({ pagato: newValue })
+            .eq("ordineid", id);
+
+        // 4️⃣ Per ogni riga eseguo inserisciVendita o rimuoviVendita
+        for (const dett of dettagli) {
+            
+            if (newValue === true) {
+                await inserisciVendita(dett.colorazioneid, dett.prezzo, destinatarioOrdine);
+            } else {
+                await rimuoviVendita(dett.colorazioneid, dett.prezzo, destinatarioOrdine);
+            }
+        }
+        
+        // 5️⃣ Ricarico la UI
+        loadOrdini();
     }
 
-    // 5️⃣ Ricarico la UI
-    loadDettaglio();
-}
 
-
-    async function inserisciVendita(colorazioneid, prezzo) {
+    async function inserisciVendita(colorazioneid, prezzo, destinatarioOrdine) {
         const now = new Date().toISOString();
 
         await db.from("vendite").insert([
@@ -361,7 +383,7 @@
         ]);
     }
 
-    async function rimuoviVendita(colorazioneid, prezzo) {
+    async function rimuoviVendita(colorazioneid, prezzo, destinatarioOrdine) {
         // Trova la vendita più recente
         const { data } = await db
             .from("vendite")

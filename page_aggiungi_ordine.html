@@ -120,6 +120,7 @@
         const destinatario = document.getElementById("destinatario").value.trim();
         const scadenza = document.getElementById("scadenza").value;
         const stato = "IN LAVORAZIONE"
+        const pagato = false
 
         if (!destinatario || !scadenza) {
             alert("Compila tutti i campi");
@@ -128,7 +129,7 @@
 
         const { error } = await db
             .from("ordini")
-            .insert([{ destinatario, scadenza_consegna: scadenza, stato }]);
+            .insert([{ destinatario, scadenza_consegna: scadenza, stato, pagato }]);
 
         if (error) {
             alert("Errore salvando ordine: " + error.message);
