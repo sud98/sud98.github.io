@@ -101,7 +101,9 @@
 
 <div class="form">
     <input type="text" id="destinatario" placeholder="Destinatario">
-
+    <label>Data creazione ordine:</label>
+    <input type="date" id="creazione">
+    <label>Data scadenza ordine:</label>
     <input type="date" id="scadenza">
 
     <button class="btn-save" onclick="salvaOrdine()">Salva Ordine</button>
@@ -116,9 +118,16 @@
         "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
     );
 
+    document.addEventListener("DOMContentLoaded", function () {
+        caricaProdotti();
+        const oggi = new Date().toISOString().split("T")[0];
+        document.getElementById("creazione").value = oggi;
+    });
+
     async function salvaOrdine() {
         const destinatario = document.getElementById("destinatario").value.trim();
         const scadenza = document.getElementById("scadenza").value;
+        const creazione = document.getElementById("creazione").value;
         const stato = "IN LAVORAZIONE"
         const pagato = false
 
@@ -129,14 +138,22 @@
 
         const { error } = await db
             .from("ordini")
-            .insert([{ destinatario, scadenza_consegna: scadenza, stato, pagato }]);
+            .insert([{ destinatario, scadenza_consegna: scadenza, data_creazione:creazione, stato, pagato }]);
 
         if (error) {
             alert("Errore salvando ordine: " + error.message);
             return;
         }
 
-        window.location.href = "page_ordini.html";
+        const { data: ordine} = await db
+            .from("ordini")
+            .select("id")
+            .eq("destinatario", destinatario)
+            .eq("scadenza_consegna", scadenza)
+            .eq("data_creazione", creazione)
+            .single();
+
+        window.location.href = "page_ordine_dettaglio.html?id=" + ordine.id;
     }
 
     function indietro() {
