@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* --- STILE GENERALE --- */
         body {
             font-family: Arial, sans-serif;
             background: #111;
@@ -17,14 +16,12 @@
             margin: 0;
         }
 
-        /* --- TITOLO --- */
         h1 {
             text-align: center;
             margin-bottom: 20px;
             font-size: 26px;
         }
 
-        /* --- CONTENITORE TABELLA --- */
         .table-container {
             max-height: 60vh;
             overflow-y: auto;
@@ -34,7 +31,6 @@
             background: #1b1b1b;
         }
 
-        /* --- TABELLA --- */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -58,19 +54,16 @@
             font-weight: bold;
         }
 
-        /* Hover riga */
         tr:hover {
             background: #2a2a2a;
             cursor: pointer;
         }
 
-        /* Celle editabili */
         td[contenteditable="true"] {
             background: #1b1b1b;
             border-radius: 4px;
         }
 
-        /* Immagini */
         img {
             max-width: 70px;
             max-height: 70px;
@@ -79,7 +72,6 @@
             margin: auto;
         }
 
-        /* --- BOTTONI --- */
         .buttons {
             display: flex;
             justify-content: center;
@@ -100,35 +92,13 @@
         .btn-edit { background: #f0ad4e; color: white; }
         .btn-del  { background: #d9534f; color: white; }
 
-        /* --- RESPONSIVE MOBILE --- */
         @media (max-width: 768px) {
-
-            h1 {
-                font-size: 22px;
-            }
-
-            th, td {
-                padding: 6px;
-                font-size: 14px;
-            }
-
-            img {
-                max-width: 55px;
-                max-height: 55px;
-            }
-
-            .buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            button {
-                width: 100%;
-                padding: 14px;
-                font-size: 17px;
-            }
+            h1 { font-size: 22px; }
+            th, td { padding: 6px; font-size: 14px; }
+            img { max-width: 55px; max-height: 55px; }
+            .buttons { flex-direction: column; gap: 10px; }
+            button { width: 100%; padding: 14px; font-size: 17px; }
         }
-
     </style>
 </head>
 
@@ -152,7 +122,6 @@
 <div class="buttons">
     <button class="btn-back" onclick="indietro()">Indietro</button>
     <button class="btn-add" onclick="aggiungiColorazione()">Aggiungi</button>
-    <button class="btn-edit" onclick="modificaImmagine()">Modifica Immagine</button>
     <button class="btn-del" onclick="eliminaColorazione()">Elimina</button>
 </div>
 
@@ -204,14 +173,15 @@
                 evidenziaRiga(tr);
             };
 
-            const imgUrl = BASE_IMG_URL + row.id + ".png";
+            //const imgUrl = BASE_IMG_URL + row.id + ".png";
+            const imgUrl = BASE_IMG_URL + row.id + ".png?cache=" + Date.now();
 
             tr.innerHTML = `
                 <td>${row.id}</td>
                 <td contenteditable="true" onblur="updateDescrizione('${row.id}', this.innerText)">
                     ${row.descrizione || ""}
                 </td>
-                <td><img src="${imgUrl}"></td>
+                <td><img src="${imgUrl}" ondblclick="cambiaImmagine('${row.id}')"></td>
             `;
 
             tbody.appendChild(tr);
@@ -247,15 +217,6 @@
         window.location.href = "page_aggiungi_colorazione.html?id=" + prodottoID;
     }
 
-    function modificaImmagine() {
-        if (!selezionata) {
-            alert("Seleziona una colorazione");
-            return;
-        }
-
-        window.location.href = "page_modifica_immagine.html?id=" + selezionata.id;
-    }
-
     async function eliminaColorazione() {
         if (!selezionata) {
             alert("Seleziona una colorazione");
@@ -264,12 +225,17 @@
 
         if (!confirm("Vuoi eliminare " + selezionata.id + "?")) return;
 
-        const { error } = await db
+        const publicURL = selezionata.percorsoimmagine;
+        const filePath = publicURL.split("/object/public/Immagini/")[1];
+        
+        await db.storage.from("Immagini").remove([filePath]);
+
+        const { error: dbError } = await db
             .from("colorazioni")
             .delete()
             .eq("id", selezionata.id);
 
-        if (error) {
+        if (dbError) {
             alert("Errore eliminando colorazione");
             return;
         }
@@ -277,6 +243,69 @@
         selezionata = null;
         loadColorazioni();
     }
+
+    async function cambiaImmagine(id) {
+        const colorazione = colorazioniCache.find(c => c.id === id);
+        if (!colorazione) return;
+
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (!confirm("Vuoi sostituire l'immagine di " + id + "?")) return;
+
+            // Percorso reale del file nel bucket
+            const oldPath = `${id}.png`;
+
+            // Elimino vecchia immagine
+            const { error: removeError } = await db.storage
+                .from("Immagini")
+                .remove([oldPath]);
+
+            if (removeError) {
+                console.error(removeError);
+                alert("Errore eliminando immagine");
+                return;
+            }
+
+            // Carico nuova immagine (sovrascrive)
+            const { error: uploadError } = await db.storage
+                .from("Immagini")
+                .upload(oldPath, file, { upsert: true });
+
+            if (uploadError) {
+                alert("Errore caricando nuova immagine");
+                console.error(uploadError);
+                return;
+            }
+
+            // Ottengo nuovo URL pubblico
+            const { data: urlData } = db.storage
+                .from("Immagini")
+                .getPublicUrl(oldPath);
+
+            const newURL = urlData.publicUrl;
+
+            // Aggiorno DB
+            await db
+                .from("colorazioni")
+                .update({ percorsoimmagine: newURL })
+                .eq("id", id);
+
+            // Aggiorno cache e tabella
+            colorazione.percorsoimmagine = newURL;
+            loadColorazioni();
+        };
+
+        input.click();
+    }
+
+
+
 </script>
 
 </body>

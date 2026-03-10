@@ -335,8 +335,8 @@
             // DOPPIO CLICK → apre pagina colorazioni
             tr.ondblclick = () => apriColorazioni(row.id);
 
-            const imgUrl = BASE_IMG_URL + row.id + "_01.png";
-
+            //const imgUrl = BASE_IMG_URL + row.id + "_01.png";
+            const imgUrl = BASE_IMG_URL + row.id + "_01.png?cache=" + Date.now();
             tr.innerHTML = `
                 <td>${row.id}</td>
                 <td>${row.prodotto}</td>

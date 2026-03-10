@@ -146,27 +146,37 @@ async function salvaColorazione() {
     const id = `${prodottoID}_${String(nextNumber).padStart(2, "0")}`;
 
     // 3️⃣ Carico l'immagine su Supabase Storage
-    const filePath = `https://ixarnqyrsonhshkctcki.supabase.co/storage/v1/object/public/Immagini/${id}.png`;
+    const filePath = `${id}.png`;
+
     const { error: uploadError } = await db.storage
         .from("Immagini")
         .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
+        console.error(uploadError);
         alert("Errore caricando immagine");
         return;
     }
 
-    // 4️⃣ Inserisco il record nella tabella
+    // 4️⃣ Ottengo l’URL pubblico
+    const { data: urlData } = db.storage
+        .from("Immagini")
+        .getPublicUrl(filePath);
+
+    const publicURL = urlData.publicUrl;
+
+    // 5️⃣ Inserisco il record nella tabella
     const { error: insertError } = await db
         .from("colorazioni")
         .insert({
             id,
-            prodottoID,
+            prodottoid: prodottoID,
             descrizione,
             percorsoimmagine: publicURL
         });
 
     if (insertError) {
+        console.error(insertError);
         alert("Errore salvando colorazione");
         return;
     }
@@ -174,6 +184,7 @@ async function salvaColorazione() {
     alert("Colorazione aggiunta!");
     window.history.back();
 }
+
 </script>
 
 </body>
