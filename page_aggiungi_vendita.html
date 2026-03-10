@@ -125,6 +125,13 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        /* ultima colonna: contenitore del bottone */
+        #tabellaprodotti td:last-child {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 120px;          /* stessa altezza massima delle immagini */
+        }
 
         /* --- CARRELLO --- */
         #tabellaCarrello td:nth-child(1),
@@ -232,10 +239,19 @@
             font-weight: bold;
         }
 
+        /* bottone + grande che riempie quasi tutta la cella */
         .btn-add {
             background: #5cb85c;
             color: white;
+            width: 90%;
+            height: 90%;
+            font-size: 40px;        /* ingrandisce il + */
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
         }
+
 
         .btn-del {
             background: #d9534f;
