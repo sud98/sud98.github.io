@@ -258,8 +258,39 @@
             color: white;
         }
 
-        .btn-back {
-            background: #5bc0de;
+        /* --- TOPBAR: pulsante full-width con freccia a destra --- */
+        .topbar {
+            width: 100%;
+            background: #1b1b1b;
+            border-bottom: 1px solid #333;
+            padding: 16px 0;
+        }
+
+        /* Pulsante che occupa tutta la larghezza della topbar */
+        .topbar .topbar-button {
+            display: block;
+            width: 80%;
+            height: 100px;
+            border-radius: 6px;
+            border: none;
+            font-size: 38px;
+            text-align: center;          /* freccia allineata a destra */
+            cursor: pointer;
+            box-sizing: border-box;
+            margin: 0 auto;
+        }
+
+        /* effetto hover leggero */
+        .topbar .topbar-button:hover {
+            background: #232323;
+        }
+
+        /* Titolo sotto la topbar, centrato */
+        .titolo-pagina {
+            text-align: center;
+            font-size: 26px;
+            font-weight: bold;
+            margin: 12px 0 10px 0;
             color: white;
         }
 
@@ -310,16 +341,36 @@
                 border-width: 1px;
                 padding: 6px;
             }
+
+            .topbar .topbar-button {
+                height: 60px;
+                width: 90%;
+                font-size: 32px;
+                padding-right: 16px;
+            }
+            .titolo-pagina {
+                font-size: 22px;
+                margin-top: 10px;
+            }
+
         }
     </style>
 </head>
 
 
 <body>
-    <div class="section-title">
-        <h1>Seleziona un Prodotto</h1>
-        <button class="arrow right" onclick="window.location.href='page_aggiungi_vendita_2.html'">&#8594;</button>
+    <!-- BARRA SUPERIORE: pulsante full-width con freccia a destra -->
+    <div class="topbar">
+        <button class="topbar-button" onclick="window.location.href='page_aggiungi_vendita_2.html'">
+            &#8594;
+        </button>
     </div>
+
+    <!-- TITOLO SOTTO LA TOPBAR -->
+    <div class="titolo-pagina">Aggiungi Vendita</div>
+
+
+
 
     <div class="section-prodotti">
         <div class="scroll-box">
