@@ -344,7 +344,7 @@
         loadDettaglio();
     }
 
-    async function togglePagato(id, currentValue, colorazioneid, prezzo) {
+    /*async function togglePagato(id, currentValue, colorazioneid, prezzo) {
         const newValue = !currentValue;
         await db.from("ordine_dettaglio").update({ pagato: newValue }).eq("id", id);
 
@@ -356,7 +356,48 @@
             await rimuoviVendita(colorazioneid, prezzo);
         }           
         loadDettaglio();
+    }*/
+
+    async function togglePagato(id, currentValue, colorazioneid, prezzo) {
+        const newValue = !currentValue;
+
+        // 1️⃣ Aggiorno il dettaglio
+        await db
+            .from("ordine_dettaglio")
+            .update({ pagato: newValue })
+            .eq("id", id);
+
+        // 2️⃣ Gestione vendite
+        if (newValue === true) {
+            await inserisciVendita(colorazioneid, prezzo);
+        } else {
+            await rimuoviVendita(colorazioneid, prezzo);
+        }
+
+        // 3️⃣ Controllo se TUTTI i dettagli dell’ordine sono pagati
+        const { data: dettagli, error } = await db
+            .from("ordine_dettaglio")
+            .select("pagato")
+            .eq("ordineid", ordineID);
+
+        if (error) {
+            console.error("Errore nel recupero dettagli ordine:", error);
+            return;
+        }
+
+        // Verifico se tutti sono pagati
+        const tuttiPagati = dettagli.every(d => d.pagato === true);
+        
+        // 4️⃣ Aggiorno la tabella ordini
+        await db
+            .from("ordini")
+            .update({ pagato: TRUE })
+            .eq("id", ordineID);
+
+        // 5️⃣ Ricarico la UI
+        loadDettaglio();
     }
+
 
     async function checkStatoOrdine(){
         //Aggiorno stato ordine

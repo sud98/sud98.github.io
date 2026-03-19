@@ -551,7 +551,14 @@
                     <tr>
                         <td>${item.idColorazione}</td>
                         <td><img src="${item.colorazione}" style="width:100px;height:70px;object-fit:contain;border-radius:6px;"></td>
-                        <td>${item.prezzo.toFixed(2)}</td>
+                         <td>
+                    <input type="number"
+                            class="prezzo-input"
+                            value="${item.prezzo}"
+                            min="0"
+                            step="0.01"
+                            data-index="${index}">
+                    </td>
                         <td>
                             <input type="number" min="1" value="${item.quantita}" 
                                 onchange="cambiaQuantita(${index}, this.value)">
