@@ -113,6 +113,50 @@
         .btn-add  { background: #5cb85c; color: white; }
         .btn-del  { background: #d9534f; color: white; }
 
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-content {
+            background: #1b1b1b;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #444;
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+        }
+
+        #notaEditor {
+            width: 100%;
+            height: 150px;
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .modal-buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+
         /* --- VERSIONE MOBILE COMPATTA --- */
         @media (max-width: 768px) {
 
@@ -201,6 +245,19 @@
     <button class="btn-back" onclick="indietro()">Indietro</button>
 </div>
 
+<div id="notaModal" class="modal">
+    <div class="modal-content">
+        <h3>Modifica Nota</h3>
+        <textarea id="notaEditor"></textarea>
+
+        <div class="modal-buttons">
+            <button onclick="salvaNota()">Salva</button>
+            <button onclick="chiudiNota()">Chiudi</button>
+        </div>
+    </div>
+</div>
+
+
 <script>
     const { createClient } = supabase;
 
@@ -215,6 +272,8 @@
     let righeCache = [];
     let selezionata = null;
     let destinatarioOrdine = "";
+    let rigaNotaSelezionata = null;
+
 
     window.onload = () => {
         loadOrdineInfo();
@@ -271,7 +330,9 @@
             };
 
             tr.innerHTML = `
-                <td>${row.colorazioneid}</td>
+                <td ondblclick="apriNota('${row.id}','${row.nota}')">
+                    ${row.colorazioneid}
+                </td>
 
                 <td contenteditable="true" 
                     onblur="updatePrezzo('${row.id}', this.innerText)">
@@ -299,6 +360,28 @@
             tbody.appendChild(tr);
         }
     }
+
+    function apriNota(id, nota) {
+        rigaNotaSelezionata = id;
+        document.getElementById("notaEditor").value = nota || "";
+        document.getElementById("notaModal").style.display = "flex";
+    }
+
+    async function salvaNota() {
+        const nuovaNota = document.getElementById("notaEditor").value;
+
+        await db
+            .from("ordine_dettaglio")
+            .update({ nota: nuovaNota })
+            .eq("id", rigaNotaSelezionata);
+
+        chiudiNota();
+    }
+
+    function chiudiNota() {
+        document.getElementById("notaModal").style.display = "none";
+    }
+
 
     function evidenziaRiga(trSel) {
         document.querySelectorAll("#table_dettaglio tbody tr").forEach(tr => {

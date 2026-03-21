@@ -130,29 +130,25 @@
             margin: auto;
         }
 
-        /* --- COLONNE STRETTE --- */
+        /* --- COLONNE LARGHE --- */
         #tabellaprodotti td:nth-child(1),
         #tabellaprodotti th:nth-child(1),
-        #tabellaprodotti td:nth-child(2),
-        #tabellaprodotti th:nth-child(2),
         #tabellaprodotti td:nth-child(3),
         #tabellaprodotti th:nth-child(3),
         #tabellaprodotti td:nth-child(4),
-        #tabellaprodotti th:nth-child(4),
-        #tabellaprodotti td:nth-child(6),
-        #tabellaprodotti th:nth-child(6) {
-            width: 80px;
-            max-width: 80px;
+        #tabellaprodotti th:nth-child(4){
+            width: 30%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        /* ultima colonna: contenitore del bottone */
-        #tabellaprodotti td:last-child {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 120px;          /* stessa altezza massima delle immagini */
+       /* --- COLONNE STRETTE --- */
+        #tabellaprodotti td:nth-child(2),
+        #tabellaprodotti th:nth-child(2){
+            width: 10%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* --- CARRELLO --- */
@@ -523,7 +519,8 @@
         function generaTabellaProdotti(dati) {
             const colonneDaSaltare = ["id","prodotto", "tipologia", "tema","sigla_prodotto", "sigla_tipologia", "sigla_tema"];
             const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
-            let html = '<table><tr>';
+            let html = '<table id="tabellaprodotti"><tr>';
+
             for (const col of colonne) html += `<th>${col}</th>`;
             html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
                 for (const riga of dati) {

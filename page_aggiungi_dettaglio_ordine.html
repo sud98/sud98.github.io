@@ -29,6 +29,28 @@
             font-weight: bold;
         }
 
+        /* --- FILTRI --- */
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .filters select,
+        .filters input {
+            height: 45px;          /* aumenta l’altezza */
+            font-size: 16px;       /* testo più grande */
+            padding: 8px 12px;     /* più spazio interno */
+            border-radius: 6px;    /* opzionale: angoli arrotondati */
+        }
+        .filters text {
+            height: 45px;          /* aumenta l’altezza */
+            font-size: 16px;       /* testo più grande */
+            padding: 8px 12px;     /* più spazio interno */
+            border-radius: 6px;    /* opzionale: angoli arrotondati */
+        }
+
         /* --- SEZIONI PRINCIPALI --- */
         .section-prodotti {
             flex: 0 0 45%;
@@ -108,29 +130,25 @@
             margin: auto;
         }
 
-        /* --- COLONNE STRETTE --- */
+        /* --- COLONNE LARGHE --- */
         #tabellaprodotti td:nth-child(1),
         #tabellaprodotti th:nth-child(1),
-        #tabellaprodotti td:nth-child(2),
-        #tabellaprodotti th:nth-child(2),
         #tabellaprodotti td:nth-child(3),
         #tabellaprodotti th:nth-child(3),
         #tabellaprodotti td:nth-child(4),
-        #tabellaprodotti th:nth-child(4),
-        #tabellaprodotti td:nth-child(6),
-        #tabellaprodotti th:nth-child(6) {
-            width: 80px;
-            max-width: 80px;
+        #tabellaprodotti th:nth-child(4){
+            width: 30%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        /* ultima colonna: contenitore del bottone */
-        #tabellaprodotti td:last-child {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 120px;          /* stessa altezza massima delle immagini */
+       /* --- COLONNE STRETTE --- */
+        #tabellaprodotti td:nth-child(2),
+        #tabellaprodotti th:nth-child(2){
+            width: 10%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* --- CARRELLO --- */
@@ -302,6 +320,11 @@
                 font-size: 18px;
             }
 
+            .filters {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
             table {
                 font-size: 14px;
             }
@@ -367,8 +390,25 @@
     </div>
 
     <!-- TITOLO SOTTO LA TOPBAR -->
-    <div class="titolo-pagina">Aggiungi Vendita</div>
+    <div class="titolo-pagina">Aggiungi Dettaglio ordine</div>
 
+    </div>
+
+    <!-- FILTRI -->
+    <div class="filters">
+        <select id="filtro_prodotto" onchange="filterProdotti()">
+            <option value="">Tutti i prodotti</option>
+        </select>
+
+        <select id="filtro_tipologia" onchange="filterProdotti()">
+            <option value="">Tutte le tipologie</option>
+        </select>
+
+        <select id="filtro_tema" onchange="filterProdotti()">
+            <option value="">Tutti i temi</option>
+        </select>
+
+        <input type="text" id="filtro_descrizione" placeholder="Filtra per descrizione..." oninput="filterProdotti()">
     </div>
 
     <div class="section-prodotti">
@@ -405,22 +445,75 @@
         let strutturaProdotto = null;
         let carrello = [];
 
-        async function caricaProdotti() {
+        window.onload = async ()=>{
+            await loadFiltri();
+            await caricaProdotti();
+            const oggi = new Date().toISOString().split("T")[0];
+            document.getElementById("dataVendita").value = oggi;
+        }
+
+        /* ============================
+        CARICAMENTO FILTRI
+        ============================ */
+        async function loadFiltri() {
+            const [prodotti, tipologie, temi] = await Promise.all([
+                client.from("sigla_prodotto").select("*").order("codice", { ascending: true }),
+                client.from("sigla_tipologia").select("*").order("codice", { ascending: true }),
+                client.from("sigla_tema").select("*").order("codice", { ascending: true })
+            ]);
+
+            const selProd = document.getElementById("filtro_prodotto");
+            const selTip  = document.getElementById("filtro_tipologia");
+            const selTema = document.getElementById("filtro_tema");
+
+            if (!prodotti.error) {
+                prodotti.data.forEach(p => {
+                    const opt = document.createElement("option");
+                    opt.value = p.codice;
+                    opt.textContent = p.codice;
+                    selProd.appendChild(opt);
+                });
+            }
+
+            if (!tipologie.error) {
+                tipologie.data.forEach(t => {
+                    const opt = document.createElement("option");
+                    opt.value = t.codice;
+                    opt.textContent = t.codice;
+                    selTip.appendChild(opt);
+                });
+            }
+
+            if (!temi.error) {
+                temi.data.forEach(t => {
+                    const opt = document.createElement("option");
+                    opt.value = t.codice;
+                    opt.textContent = t.codice;
+                    selTema.appendChild(opt);
+                });
+            }
+        }
+
+       async function caricaProdotti() {
             const { data: prodotti } =
                 await client.from("prodotti").select("*").order("id", { ascending: true });
 
             const { data: colorazioni } =
                 await client.from("colorazioni").select("id, prodottoid, percorsoimmagine");
+
             tutteLeColorazioni = colorazioni;
             strutturaProdotto = prodotti[0];
-            document.getElementById("tabellaProdotti").innerHTML =
-                generaTabellaProdotti(prodotti);
+
+            prodottiCache2 = prodotti;   // <-- CACHE
+
+            renderProdotti();           // <-- NUOVA FUNZIONE DI RENDER
         }
 
         function generaTabellaProdotti(dati) {
-            const colonneDaSaltare = ["id","sigla_prodotto", "sigla_tipologia", "sigla_tema","descrizione"];
+            const colonneDaSaltare = ["id","prodotto", "tipologia", "tema","sigla_prodotto", "sigla_tipologia", "sigla_tema"];
             const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
-            let html = '<table><tr>';
+            let html = '<table id="tabellaprodotti"><tr>';
+
             for (const col of colonne) html += `<th>${col}</th>`;
             html += `<th>Colorazione</th><th>Aggiungi</th></tr>`;
                 for (const riga of dati) {
@@ -458,6 +551,26 @@
                 }
             html += "</table>";
             return html;
+        }
+
+        function filterProdotti() {
+            renderProdotti();
+        }
+
+        function renderProdotti() {
+            const fProd = document.getElementById("filtro_prodotto").value;
+            const fTip  = document.getElementById("filtro_tipologia").value;
+            const fTema = document.getElementById("filtro_tema").value;
+            const fDesc = document.getElementById("filtro_descrizione").value.toLowerCase();
+
+            const filtrati = prodottiCache2
+                .filter(p => !fProd || p.prodotto === fProd)
+                .filter(p => !fTip  || p.tipologia === fTip)
+                .filter(p => !fTema || p.tema === fTema)
+                .filter(p => !fDesc || (p.descrizione || "").toLowerCase().includes(fDesc));
+
+            document.getElementById("tabellaProdotti").innerHTML =
+                generaTabellaProdotti(filtrati);
         }
 
         function toggleColorMenu(idProdotto) {
@@ -622,12 +735,6 @@
                 }
             });
         });
-
-        window.onload = function(){
-            caricaProdotti();
-            const oggi = new Date().toISOString().split("T")[0];
-            document.getElementById("dataVendita").value = oggi;
-        }
 
         function annulla() {
             window.location.href = "page_ordine_dettaglio.html?id=" + ordineID;
