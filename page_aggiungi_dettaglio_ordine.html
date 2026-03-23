@@ -54,14 +54,16 @@
         /* --- SEZIONI PRINCIPALI --- */
         .section-prodotti {
             flex: 0 0 45%;
-            overflow: hidden;
+            overflow-y: auto;        /* <-- qui appare la scrollbar verticale */
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
         }
 
         .section-carrello {
             flex: 0 0 25%;
-            overflow: hidden;
+            overflow-y: auto;        /* <-- qui appare la scrollbar verticale */
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -89,7 +91,7 @@
             flex: 1;
             width: 95%;
             margin: auto;
-            overflow-y: auto;
+            overflow: visible;
             border: 1px solid #333;
             border-radius: 8px;
             padding: 10px;
@@ -130,6 +132,12 @@
             margin: auto;
         }
 
+        /* evidenzia la riga aperta e la porta sopra le altre */
+        tr.row-open {
+        position: relative;
+        z-index: 9999; /* abbastanza alto rispetto a thead z-index:5 */
+        }
+
         /* --- COLONNE LARGHE --- */
         #tabellaprodotti td:nth-child(1),
         #tabellaprodotti th:nth-child(1),
@@ -138,7 +146,7 @@
         #tabellaprodotti td:nth-child(4),
         #tabellaprodotti th:nth-child(4){
             width: 30%;
-            overflow: hidden;
+            overflow: visible;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
@@ -146,7 +154,7 @@
         #tabellaprodotti td:nth-child(2),
         #tabellaprodotti th:nth-child(2){
             width: 10%;
-            overflow: hidden;
+            overflow: visible;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
@@ -174,10 +182,11 @@
             height: 100%;
             cursor: pointer;
             user-select: none;
-            position: relative;
+            position: relative;      /* fondamentale */
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 10;             /* porta la cella sopra le altre */
         }
 
         .color-select-display {
@@ -198,23 +207,29 @@
             border-radius: 6px;
         }
 
-        /* Menu colorazioni */
+        /* --- MENU COLORAZIONI --- */
+        /* assicurati che la cella non crei stacking context limitante */
+        .color-select { position: relative; z-index: 0; }
+
+        /* menu: rimane assoluto ma verrà spostato nel body via JS */
         .color-select-options {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60%;
-            max-height: 250px;
-            overflow-y: auto;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 5px;
-            display: none;
-            flex-direction: column;
-            z-index: 1000;
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px;
+        max-height: 250px;
+        overflow-y: auto;
+        background: #222;
+        border: 1px solid #444;
+        border-radius: 6px;
+        padding: 5px;
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        /* non impostare z-index fisso qui se userai JS dinamico */
         }
+
 
         .color-select-options img {
             width: 100%;
@@ -223,7 +238,6 @@
             border-radius: 6px;
             cursor: pointer;
             border: 2px solid transparent;
-            margin-bottom: 5px;
         }
 
         .color-select-options img:hover {
@@ -624,7 +638,7 @@
             const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
             const celle = riga.querySelectorAll("td");
             const nome = celle[1].innerText;
-            const prezzo = parseFloat(celle[3].innerText);
+            const prezzo = parseFloat(celle[1].innerText);
             const preview = document.getElementById(`color-preview-${idProdotto}`);
             const colorazione = preview.src;
             const idColorazione = preview.dataset.idcolorazione;
@@ -661,7 +675,14 @@
                     <tr>
                         <td>${item.idColorazione}</td>
                         <td><img src="${item.colorazione}" style="width:100px;height:70px;object-fit:contain;border-radius:6px;"></td>
-                        <td>${item.prezzo.toFixed(2)}</td>
+                         <td>
+                        <input type="number"
+                                class="prezzo-input"
+                                value="${item.prezzo}"
+                                min="0"
+                                step="0.01"
+                                data-index="${index}">
+                        </td>
                         <td>
                             <input type="number" min="1" value="${item.quantita}" 
                                 onchange="cambiaQuantita(${index}, this.value)">
