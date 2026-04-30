@@ -14,7 +14,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: rgb(167, 167, 197);
+            background: rgb(160, 100, 26);
             color: #f5f5f5;
         }
 
@@ -211,28 +211,37 @@
         /* assicurati che la cella non crei stacking context limitante */
         .color-select { position: relative; z-index: 0; }
 
-        /* menu: rimane assoluto ma verrà spostato nel body via JS */
         .color-select-options {
-            /* ... i tuoi stili precedenti ... */
-            position: absolute;
-            top: 50px; /* Sposta il menu un po' più in basso per non coprire l'immagine originale */
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000 !important; /* Valore altissimo */
-            display: none;
-            background: #222;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* Ombra forte per vederlo bene su mobile */
-        }
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;         /* Larghezza fissa per non occupare tutto lo schermo */
+    max-height: 250px;
+    overflow-y: auto;
+    background: #222;
+    border: 2px solid #5cb85c; /* Bordo colorato per distinguerlo bene */
+    border-radius: 8px;
+    padding: 8px;
+    display: none;        /* Gestito da JS */
+    
+    /* --- SOLUZIONE ORIZZONTALE --- */
+    flex-direction: column !important; /* Forza gli elementi in verticale */
+    gap: 10px;
+    
+    z-index: 10000;
+    box-shadow: 0px 10px 25px rgba(0,0,0,0.7);
+}
 
-
-        .color-select-options img {
-            width: 100%;
-            height: 120px;
-            object-fit: contain;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
+.color-select-options img {
+    width: 100%;          /* Occupa tutta la larghezza del menu (180px) */
+    height: auto;         /* Mantiene le proporzioni */
+    aspect-ratio: 4/3;    /* Forza una forma regolare */
+    object-fit: contain;
+    background: #333;
+    border-radius: 4px;
+    flex-shrink: 0;       /* Impedisce alle immagini di rimpicciolirsi */
+}
 
         .color-select-options img:hover {
             border-color: #5cb85c;
@@ -403,6 +412,15 @@
                 background: #222;
                 box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* Ombra forte per vederlo bene su mobile */
             }
+
+            tr.row-open {
+    position: relative;
+    z-index: 999 !important;
+}
+
+tr.row-open td {
+    overflow: visible !important; /* Fondamentale per far uscire il menu dalla cella */
+}
         }
     </style>
 </head>
