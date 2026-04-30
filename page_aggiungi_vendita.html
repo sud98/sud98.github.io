@@ -14,7 +14,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: rgb(44, 44, 136);
+            background: rgb(167, 167, 197);
             color: #f5f5f5;
         }
 
@@ -213,23 +213,15 @@
 
         /* menu: rimane assoluto ma verrà spostato nel body via JS */
         .color-select-options {
+            /* ... i tuoi stili precedenti ... */
             position: absolute;
-            top: 100%;
+            top: 50px; /* Sposta il menu un po' più in basso per non coprire l'immagine originale */
             left: 50%;
             transform: translateX(-50%);
-            width: 200px;
-            max-height: 250px;
-            overflow-y: auto;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 5px;
+            z-index: 10000 !important; /* Valore altissimo */
             display: none;
-            flex-direction: column;
-            gap: 5px;
-            /* Aggiungi questo: */
-            z-index: 9999; 
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.5); /* Aiuta a staccarsi dal fondo */
+            background: #222;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* Ombra forte per vederlo bene su mobile */
         }
 
 
@@ -398,6 +390,18 @@
             .titolo-pagina {
                 font-size: 22px;
                 margin-top: 10px;
+            }
+
+            .color-select-options {
+                /* ... i tuoi stili precedenti ... */
+                position: absolute;
+                top: 50px; /* Sposta il menu un po' più in basso per non coprire l'immagine originale */
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10000 !important; /* Valore altissimo */
+                display: none;
+                background: #222;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* Ombra forte per vederlo bene su mobile */
             }
         }
     </style>
@@ -635,17 +639,19 @@
             const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
             const isOpen = menu.style.display === "flex";
 
-            // chiudi tutti i menu e resetta le righe
+            // Chiudi TUTTI i menu aperti e resetta TUTTE le righe
             document.querySelectorAll(".color-select-options").forEach(m => {
                 m.style.display = "none";
-                m.style.pointerEvents = "none";
             });
-            document.querySelectorAll("tr").forEach(r => r.classList.remove("row-open"));
+            document.querySelectorAll("tr").forEach(r => {
+                r.classList.remove("row-open");
+                r.style.zIndex = "auto"; // Reset z-index
+            });
 
             if (!isOpen) {
                 menu.style.display = "flex";
-                menu.style.pointerEvents = "auto";
-                riga.classList.add("row-open");   // questa riga sale sopra le altre
+                riga.classList.add("row-open");
+                riga.style.zIndex = "999"; // Solleva la riga attiva
             }
         }
 
