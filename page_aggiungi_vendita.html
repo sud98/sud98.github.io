@@ -134,8 +134,9 @@
 
         /* evidenzia la riga aperta e la porta sopra le altre */
         tr.row-open {
-        position: relative;
-        z-index: 9999; /* abbastanza alto rispetto a thead z-index:5 */
+    /* Su mobile, trasformiamo la riga in un nuovo contesto di posizionamento */
+            z-index: 999 !important;
+            position: relative;
         }
 
         /* --- COLONNE LARGHE --- */
@@ -186,7 +187,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10;             /* porta la cella sopra le altre */
         }
 
         .color-select-display {
@@ -213,21 +213,23 @@
 
         /* menu: rimane assoluto ma verrà spostato nel body via JS */
         .color-select-options {
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 200px;
-        max-height: 250px;
-        overflow-y: auto;
-        background: #222;
-        border: 1px solid #444;
-        border-radius: 6px;
-        padding: 5px;
-        display: none;
-        flex-direction: column;
-        gap: 5px;
-        /* non impostare z-index fisso qui se userai JS dinamico */
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            max-height: 250px;
+            overflow-y: auto;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 5px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            /* Aggiungi questo: */
+            z-index: 9999; 
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.5); /* Aiuta a staccarsi dal fondo */
         }
 
 
