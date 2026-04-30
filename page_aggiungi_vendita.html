@@ -6,7 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* --- STILE GENERALE --- */
+        /* --- RESET E LAYOUT --- */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -14,823 +14,248 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: rgb(255, 255, 255);
-            color: #f5f5f5;
+            background: #000000;
+            color: #333;
         }
 
-        /* --- TITOLI SEZIONI --- */
-        .section-title,
-        .section-carrello-title {
-            flex: 0 0 5%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-weight: bold;
-        }
+        .section-prodotti { flex: 0 0 45%; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
+        .section-carrello { flex: 0 0 25%; overflow-y: auto; display: flex; flex-direction: column; background: #f9f9f9; }
+        .section-dati { flex: 0 0 10%; display: flex; align-items: center; justify-content: center; gap: 15px; padding: 10px; background: #eee; }
+        .section-bottoni { flex: 0 0 10%; display: flex; align-items: center; justify-content: center; gap: 20px; }
+
+        /* --- TOPBAR --- */
+        .topbar { width: 100%; background: #1b1b1b; padding: 15px 0; text-align: center; }
+        .topbar-button { width: 80%; height: 60px; border-radius: 8px; border: none; font-size: 30px; cursor: pointer; background: #333; color: white; }
+        .titolo-pagina { text-align: center; font-size: 22px; font-weight: bold; margin: 10px 0; }
 
         /* --- FILTRI --- */
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 15px;
+        .filters { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; background: #fff; }
+        .filters select, .filters input { height: 40px; font-size: 14px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+
+        /* --- TABELLE (FIX Z-INDEX) --- */
+        .scroll-box { flex: 1; width: 98%; margin: auto; background: #222; border-radius: 8px; padding: 5px; color: #fff; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: center; vertical-align: middle; position: relative; }
+        thead th { position: sticky; top: 0; background: #333; z-index: 10; }
+
+        /* TRUCCO PER MOBILE: Solleviamo la riga attiva sopra ogni cosa */
+        tr.row-open { 
+            z-index: 9999 !important; 
+            position: relative; 
+            background: #2a2a2a !important;
         }
 
-        .filters select,
-        .filters input {
-            height: 45px;          /* aumenta l’altezza */
-            font-size: 16px;       /* testo più grande */
-            padding: 8px 12px;     /* più spazio interno */
-            border-radius: 6px;    /* opzionale: angoli arrotondati */
-        }
-        .filters text {
-            height: 45px;          /* aumenta l’altezza */
-            font-size: 16px;       /* testo più grande */
-            padding: 8px 12px;     /* più spazio interno */
-            border-radius: 6px;    /* opzionale: angoli arrotondati */
-        }
-
-        /* --- SEZIONI PRINCIPALI --- */
-        .section-prodotti {
-            flex: 0 0 45%;
-            overflow-y: auto;        /* <-- qui appare la scrollbar verticale */
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .section-carrello {
-            flex: 0 0 25%;
-            overflow-y: auto;        /* <-- qui appare la scrollbar verticale */
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .section-dati {
-            flex: 0 0 10%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            padding: 10px 20px;
-            font-size: 18px;
-        }
-
-        .section-bottoni {
-            flex: 0 0 10%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        /* --- CONTENITORI SCROLLABILI --- */
-        .scroll-box {
-            flex: 1;
-            width: 95%;
-            margin: auto;
-            overflow: visible;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 10px;
-            background: #222;
-        }
-
-        /* --- TABELLE --- */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 18px;
-            table-layout: fixed; /* evita scroll orizzontale */
-        }
-
-        table td, table th {
-            border: 1px solid #333;
-            padding: 6px 8px;
-            vertical-align: middle;
-            word-wrap: break-word;
-            white-space: normal;
-        }
-
-        /* Header sticky */
-        thead th {
-            position: sticky;
-            top: 0;
-            background: #333;
-            z-index: 5;
-        }
-
-        /* --- IMMAGINI --- */
-        table td img {
-            width: 100%;
-            height: auto;
-            max-height: 120px;
-            object-fit: contain;
-            display: block;
-            margin: auto;
-        }
-
-        /* evidenzia la riga aperta e la porta sopra le altre */
-        tr.row-open {
-    /* Su mobile, trasformiamo la riga in un nuovo contesto di posizionamento */
-            z-index: 999 !important;
-            position: relative;
-        }
-
-        /* --- COLONNE LARGHE --- */
-        #tabellaprodotti td:nth-child(1),
-        #tabellaprodotti th:nth-child(1),
-        #tabellaprodotti td:nth-child(3),
-        #tabellaprodotti th:nth-child(3),
-        #tabellaprodotti td:nth-child(4),
-        #tabellaprodotti th:nth-child(4){
-            width: 30%;
-            overflow: visible;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-       /* --- COLONNE STRETTE --- */
-        #tabellaprodotti td:nth-child(2),
-        #tabellaprodotti th:nth-child(2){
-            width: 10%;
-            overflow: visible;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* --- CARRELLO --- */
-        #tabellaCarrello td:nth-child(1),
-        #tabellaCarrello th:nth-child(1),
-        #tabellaCarrello td:nth-child(2),
-        #tabellaCarrello th:nth-child(2) {
-            width: 35%;
-        }
-
-        #tabellaCarrello td:nth-child(3),
-        #tabellaCarrello th:nth-child(3),
-        #tabellaCarrello td:nth-child(4),
-        #tabellaCarrello th:nth-child(4),
-        #tabellaCarrello td:nth-child(5),
-        #tabellaCarrello th:nth-child(5) {
-            width: 10%;
-        }
-
-        /* --- SELECTOR COLORAZIONI --- */
-        .color-select {
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-            user-select: none;
-            position: relative;      /* fondamentale */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
+        /* --- SELECTOR COLORE --- */
         .color-select-display {
             width: 100%;
-            height: 100%;
-            border: 1px solid #444;
-            border-radius: 6px;
+            height: 60px;
             background: #1b1b1b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
         }
-
-        .color-select-display img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 6px;
-        }
-
-        /* --- MENU COLORAZIONI --- */
-        /* assicurati che la cella non crei stacking context limitante */
-        .color-select { position: relative; z-index: 0; }
+        .color-select-display img { width: 100%; height: 100%; object-fit: contain; }
 
         .color-select-options {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 180px;         /* Larghezza fissa per non occupare tutto lo schermo */
-    max-height: 250px;
-    overflow-y: auto;
-    background: #222;
-    border: 2px solid #5cb85c; /* Bordo colorato per distinguerlo bene */
-    border-radius: 8px;
-    padding: 8px;
-    display: none;        /* Gestito da JS */
-    
-    /* --- SOLUZIONE ORIZZONTALE --- */
-    flex-direction: column !important; /* Forza gli elementi in verticale */
-    gap: 10px;
-    
-    z-index: 10000;
-    box-shadow: 0px 10px 25px rgba(0,0,0,0.7);
-}
-
-.color-select-options img {
-    width: 100%;          /* Occupa tutta la larghezza del menu (180px) */
-    height: auto;         /* Mantiene le proporzioni */
-    aspect-ratio: 4/3;    /* Forza una forma regolare */
-    object-fit: contain;
-    background: #333;
-    border-radius: 4px;
-    flex-shrink: 0;       /* Impedisce alle immagini di rimpicciolirsi */
-}
-
-        .color-select-options img:hover {
-            border-color: #5cb85c;
-        }
-
-
-        /* --- INPUT DATI --- */
-        .section-dati label {
-            font-weight: bold;
-            width: 20%;
-        }
-
-        .section-dati input {
-            width: 40%;
-            padding: 8px 12px;
-            font-size: 18px;
-            border: 2px solid #444;
-            border-radius: 6px;
-            background: #1b1b1b;
-            color: #fff;
-        }
-
-        /* --- BOTTONI --- */
-        .section-bottoni button {
-            width: 45%;
-            height: 60px;
-            font-size: 22px;
+            position: absolute;
+            top: 70px; /* Sotto l'immagine preview */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #333;
+            border: 2px solid #5cb85c;
             border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
+            display: none; /* Attivato via JS */
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px;
+            z-index: 10000 !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+        .color-select-options img { width: 100%; height: auto; border-radius: 4px; cursor: pointer; background: #000; }
 
-        /* bottone + grande che riempie quasi tutta la cella */
-        .btn-add {
-            background: #5cb85c;
-            color: white;
-            width: 90%;
-            height: 90%;
-            font-size: 40px;        /* ingrandisce il + */
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        /* --- BOTTONI AZIONE --- */
+        .btn-add { background: #5cb85c; color: white; border: none; width: 50px; height: 50px; font-size: 25px; border-radius: 50%; cursor: pointer; }
+        .section-bottoni button { padding: 15px 30px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-conferma { background: #5cb85c; color: white; }
+        .btn-annulla { background: #d9534f; color: white; }
 
-
-        .btn-del {
-            background: #d9534f;
-            color: white;
-        }
-
-        /* --- TOPBAR: pulsante full-width con freccia a destra --- */
-        .topbar {
-            width: 100%;
-            background: #1b1b1b;
-            border-bottom: 1px solid #333;
-            padding: 16px 0;
-        }
-
-        /* Pulsante che occupa tutta la larghezza della topbar */
-        .topbar .topbar-button {
-            display: block;
-            width: 80%;
-            height: 100px;
-            border-radius: 6px;
-            border: none;
-            font-size: 38px;
-            text-align: center;          /* freccia allineata a destra */
-            cursor: pointer;
-            box-sizing: border-box;
-            margin: 0 auto;
-        }
-
-        /* effetto hover leggero */
-        .topbar .topbar-button:hover {
-            background: #232323;
-        }
-
-        /* Titolo sotto la topbar, centrato */
-        .titolo-pagina {
-            text-align: center;
-            font-size: 26px;
-            font-weight: bold;
-            margin: 12px 0 10px 0;
-            color: white;
-        }
-
-        /* --- RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-
-            .section-title,
-            .section-carrello-title {
-                font-size: 18px;
-            }
-
-            .filters {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-
-            table {
-                font-size: 14px;
-            }
-
-            table td, table th {
-                padding: 4px;
-                font-size: 14px;
-            }
-
-            table td img {
-                max-height: 80px;
-            }
-
-            .section-dati {
-                flex-direction: column;
-                gap: 10px;
-                font-size: 16px;
-            }
-
-            .section-dati label,
-            .section-dati input {
-                width: 100%;
-            }
-
-            .section-bottoni {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .section-bottoni button {
-                width: 90%;
-                height: 55px;
-                font-size: 18px;
-            }
-
-            .scroll-box {
-                border-width: 1px;
-                padding: 6px;
-            }
-
-            .topbar .topbar-button {
-            display: block;
-            width: 80%;
-            height: 100px;
-            border-radius: 6px;
-            border: none;
-            font-size: 38px;
-            text-align: center;          /* freccia allineata a destra */
-            cursor: pointer;
-            box-sizing: border-box;
-            margin: 0 auto;
-        }
-            
-            .titolo-pagina {
-                font-size: 22px;
-                margin-top: 10px;
-            }
-
-            .color-select-options {
-                /* ... i tuoi stili precedenti ... */
-                position: absolute;
-                top: 50px; /* Sposta il menu un po' più in basso per non coprire l'immagine originale */
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 10000 !important; /* Valore altissimo */
-                display: none;
-                background: #222;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* Ombra forte per vederlo bene su mobile */
-            }
-
-            tr.row-open {
-    position: relative;
-    z-index: 999 !important;
-}
-
-tr.row-open td {
-    overflow: visible !important; /* Fondamentale per far uscire il menu dalla cella */
-}
+        @media (max-width: 600px) {
+            .section-dati { flex-direction: column; font-size: 14px; }
+            .section-dati input { width: 90%; }
         }
     </style>
 </head>
 
-
 <body>
-    <!-- BARRA SUPERIORE: pulsante full-width con freccia a destra -->
     <div class="topbar">
-        <button class="topbar-button" onclick="window.location.href='page_aggiungi_vendita_2.html'">
-            &#8594;
-        </button>
+        <button class="topbar-button" onclick="window.location.href='page_aggiungi_vendita_2.html'">&#8594;</button>
     </div>
 
-    <!-- TITOLO SOTTO LA TOPBAR -->
-    <div class="titolo-pagina">Aggiungi Vendita</div>
+    <div class="titolo-pagina">Nuova Vendita</div>
 
-    <!-- FILTRI -->
     <div class="filters">
-        <select id="filtro_prodotto" onchange="filterProdotti()">
-            <option value="">Tutti i prodotti</option>
-        </select>
-
-        <select id="filtro_tipologia" onchange="filterProdotti()">
-            <option value="">Tutte le tipologie</option>
-        </select>
-
-        <select id="filtro_tema" onchange="filterProdotti()">
-            <option value="">Tutti i temi</option>
-        </select>
-
-        <input type="text" id="filtro_descrizione" placeholder="Filtra per descrizione..." oninput="filterProdotti()">
+        <select id="filtro_prodotto" onchange="filterProdotti()"><option value="">Prodotto</option></select>
+        <select id="filtro_tipologia" onchange="filterProdotti()"><option value="">Tipologia</option></select>
+        <select id="filtro_tema" onchange="filterProdotti()"><option value="">Tema</option></select>
+        <input type="text" id="filtro_descrizione" placeholder="Descrizione..." oninput="filterProdotti()">
     </div>
 
     <div class="section-prodotti">
-        <div class="scroll-box">
-            <div id="tabellaProdotti"></div>
-        </div>
+        <div class="scroll-box" id="tabellaProdotti"></div>
     </div>
 
-    <div class="section-carrello-title">
-        <h2>Carrello</h2>
-    </div>
-
+    <div class="titolo-pagina" style="font-size: 18px;">Carrello</div>
     <div class="section-carrello">
-        <div class="scroll-box" id="carrelloContainer">
-            <p>Carrello vuoto</p>
+        <div class="scroll-box" id="carrelloContainer" style="background: transparent; color: #333;">
+            <p style="text-align:center">Carrello vuoto</p>
         </div>
     </div>
 
     <div class="section-dati">
-        <label for="campo1">Destinatario:</label>
-        <input type="text" id="Destinatario" placeholder="Inserisci nome">
-
-        <label for="dataVendita">Data vendita:</label> 
+        <input type="text" id="Destinatario" placeholder="Nome Destinatario">
         <input type="date" id="dataVendita">
     </div>
 
-
     <div class="section-bottoni">
-        <button onclick="confermaVendita()">Conferma</button>
-        <button onclick="window.location.href='page_vendite.html'">Annulla</button>
+        <button class="btn-conferma" onclick="confermaVendita()">CONFERMA</button>
+        <button class="btn-annulla" onclick="window.location.href='page_vendite.html'">ANNULLA</button>
     </div>
 
     <script>
-        const client = supabase.createClient(
-            "https://ixarnqyrsonhshkctcki.supabase.co",
-            "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
-        );
-        let tutteLeColorazioni = [];
-        let strutturaProdotto = null;
-        let carrello = [];
-        let prodottiCache2 = [];
+        const client = supabase.createClient("https://ixarnqyrsonhshkctcki.supabase.co", "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ");
+        let tutteLeColorazioni = [], prodottiCache = [], carrello = [];
 
-        window.onload = async ()=>{
-            await loadFiltri();
-            await caricaProdotti();
-            const oggi = new Date().toISOString().split("T")[0];
-            document.getElementById("dataVendita").value = oggi;
+        window.onload = async () => {
+            await Promise.all([loadFiltri(), caricaProdotti()]);
+            document.getElementById("dataVendita").value = new Date().toISOString().split("T")[0];
         };
 
-        /* ============================
-        CARICAMENTO FILTRI
-        ============================ */
         async function loadFiltri() {
-            const [prodotti, tipologie, temi] = await Promise.all([
-                client.from("sigla_prodotto").select("*").order("codice", { ascending: true }),
-                client.from("sigla_tipologia").select("*").order("codice", { ascending: true }),
-                client.from("sigla_tema").select("*").order("codice", { ascending: true })
-            ]);
-
-            const selProd = document.getElementById("filtro_prodotto");
-            const selTip  = document.getElementById("filtro_tipologia");
-            const selTema = document.getElementById("filtro_tema");
-
-            if (!prodotti.error) {
-                prodotti.data.forEach(p => {
-                    const opt = document.createElement("option");
-                    opt.value = p.codice;
-                    opt.textContent = p.codice;
-                    selProd.appendChild(opt);
-                });
-            }
-
-            if (!tipologie.error) {
-                tipologie.data.forEach(t => {
-                    const opt = document.createElement("option");
-                    opt.value = t.codice;
-                    opt.textContent = t.codice;
-                    selTip.appendChild(opt);
-                });
-            }
-
-            if (!temi.error) {
-                temi.data.forEach(t => {
-                    const opt = document.createElement("option");
-                    opt.value = t.codice;
-                    opt.textContent = t.codice;
-                    selTema.appendChild(opt);
-                });
-            }
+            const fetchFilter = (table) => client.from(table).select("codice");
+            const [p, ti, te] = await Promise.all([fetchFilter("sigla_prodotto"), fetchFilter("sigla_tipologia"), fetchFilter("sigla_tema")]);
+            
+            const fill = (el, data) => data?.forEach(i => el.innerHTML += `<option value="${i.codice}">${i.codice}</option>`);
+            fill(document.getElementById("filtro_prodotto"), p.data);
+            fill(document.getElementById("filtro_tipologia"), ti.data);
+            fill(document.getElementById("filtro_tema"), te.data);
         }
 
-       async function caricaProdotti() {
-            const { data: prodotti } =
-                await client.from("prodotti").select("*").order("id", { ascending: true });
-
-            const { data: colorazioni } =
-                await client.from("colorazioni").select("id, prodottoid, percorsoimmagine");
-
-            tutteLeColorazioni = colorazioni;
-            strutturaProdotto = prodotti[0];
-
-            prodottiCache2 = prodotti;   // <-- CACHE
-
-            renderProdotti();           // <-- NUOVA FUNZIONE DI RENDER
-        }
-
-        function generaTabellaProdotti(dati) {
-            const colonneDaSaltare = ["id","prodotto", "tipologia", "tema","sigla_prodotto", "sigla_tipologia", "sigla_tema"];
-            const colonne = Object.keys(dati[0]).filter(c => !colonneDaSaltare.includes(c));
-
-            let html = `
-                <table id="tabellaprodotti">
-                    <thead>
-                        <tr>
-            `;
-
-            for (const col of colonne) {
-                html += `<th>${col}</th>`;
-            }
-
-            html += `
-                            <th>Colorazione</th>
-                            <th>Aggiungi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            for (const riga of dati) {
-                html += `<tr data-id="${riga.id}">`;
-
-                for (const col of colonne) {
-                    html += `<td>${riga[col]}</td>`;
-                }
-
-                const colori = tutteLeColorazioni.filter(c => c.prodottoid === riga.id);
-
-                html += `
-                    <td>
-                        <div class="color-select" data-id="${riga.id}">
-                            <div class="color-select-display">
-                                <img id="color-preview-${riga.id}"
-                                    src="${colori[0]?.percorsoimmagine}"
-                                    data-idcolorazione="${colori[0]?.id}"
-                                    onclick="event.stopPropagation(); toggleColorMenu('${riga.id}')">
-                            </div>
-
-                            <div class="color-select-options" id="color-options-${riga.id}">
-                `;
-
-                colori.forEach(c => {
-                    html += `
-                        <img src="${c.percorsoimmagine}"
-                            data-idcolorazione="${c.id}"
-                            onclick="event.stopPropagation(); selezionaColorazione('${riga.id}', '${c.percorsoimmagine}', '${c.id}')">
-                    `;
-                });
-
-                html += `
-                            </div>
-                        </div>
-                    </td>
-                `;
-
-                html += `
-                    <td>
-                        <button class="btn-add" onclick="aggiungiAlCarrello('${riga.id}')">+</button>
-                    </td>
-                </tr>`;
-            }
-
-            html += `
-                    </tbody>
-                </table>
-            `;
-
-            return html;
-        }
-
-
-        function filterProdotti() {
+        async function caricaProdotti() {
+            const { data: p } = await client.from("prodotti").select("*");
+            const { data: c } = await client.from("colorazioni").select("*");
+            prodottiCache = p;
+            tutteLeColorazioni = c;
             renderProdotti();
         }
 
+        function filterProdotti() { renderProdotti(); }
+
         function renderProdotti() {
-            const fProd = document.getElementById("filtro_prodotto").value;
-            const fTip  = document.getElementById("filtro_tipologia").value;
-            const fTema = document.getElementById("filtro_tema").value;
-            const fDesc = document.getElementById("filtro_descrizione").value.toLowerCase();
+            const fP = document.getElementById("filtro_prodotto").value;
+            const fTi = document.getElementById("filtro_tipologia").value;
+            const fTe = document.getElementById("filtro_tema").value;
+            const fD = document.getElementById("filtro_descrizione").value.toLowerCase();
 
-            const filtrati = prodottiCache2
-                .filter(p => !fProd || p.prodotto === fProd)
-                .filter(p => !fTip  || p.tipologia === fTip)
-                .filter(p => !fTema || p.tema === fTema)
-                .filter(p => !fDesc || (p.descrizione || "").toLowerCase().includes(fDesc));
+            const filtrati = prodottiCache.filter(p => 
+                (!fP || p.prodotto === fP) && (!fTi || p.tipologia === fTi) && 
+                (!fTe || p.tema === fTe) && (!fD || p.descrizione?.toLowerCase().includes(fD))
+            );
 
-            document.getElementById("tabellaProdotti").innerHTML =
-                generaTabellaProdotti(filtrati);
+            let html = `<table><thead><tr><th>Info</th><th>Colore</th><th>+</th></tr></thead><tbody>`;
+            filtrati.forEach(p => {
+                const colori = tutteLeColorazioni.filter(c => c.prodottoid === p.id);
+                html += `
+                <tr data-id="${p.id}">
+                    <td style="font-size:12px"><b>${p.prodotto}</b><br>${p.descrizione || ''}</td>
+                    <td>
+                        <div class="color-select-display" onclick="toggleColorMenu('${p.id}')">
+                            <img id="preview-${p.id}" src="${colori[0]?.percorsoimmagine}" data-idcol="${colori[0]?.id}">
+                        </div>
+                        <div class="color-select-options" id="options-${p.id}">
+                            ${colori.map(c => `<img src="${c.percorsoimmagine}" onclick="selezionaColorazione('${p.id}','${c.percorsoimmagine}','${c.id}')">`).join('')}
+                        </div>
+                    </td>
+                    <td><button class="btn-add" onclick="aggiungiAlCarrello('${p.id}')">+</button></td>
+                </tr>`;
+            });
+            document.getElementById("tabellaProdotti").innerHTML = html + `</tbody></table>`;
         }
 
-        function toggleColorMenu(idProdotto) {
-            const menu = document.getElementById(`color-options-${idProdotto}`);
-            const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
-            
-            // Verifichiamo lo stato attuale PRIMA di chiudere tutto
-            const isAlreadyOpen = menu.style.display === "flex";
+        function toggleColorMenu(id) {
+            const menu = document.getElementById(`options-${id}`);
+            const riga = document.querySelector(`tr[data-id="${id}"]`);
+            const isOpen = menu.style.display === "flex";
 
-            // 1. Chiudiamo TUTTI i menu e resettiamo tutte le righe
-            document.querySelectorAll(".color-select-options").forEach(m => {
-                m.style.display = "none";
-            });
-            document.querySelectorAll("tr").forEach(r => {
-                r.classList.remove("row-open");
-            });
+            document.querySelectorAll(".color-select-options").forEach(m => m.style.display = "none");
+            document.querySelectorAll("tr").forEach(r => r.classList.remove("row-open"));
 
-            // 2. Se il menu cliccato NON era aperto, lo apriamo
-            if (!isAlreadyOpen) {
+            if (!isOpen) {
                 menu.style.display = "flex";
                 riga.classList.add("row-open");
             }
         }
 
-        function selezionaColorazione(idProdotto, imgPath, idColorazione) {
-            const preview = document.getElementById(`color-preview-${idProdotto}`);
-            preview.src = imgPath;
-            preview.dataset.idcolorazione = idColorazione;
-
-            const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
-            riga.dataset.colorazioneSelezionata = idColorazione;
-            
-            // CHIUDI TUTTO dopo la selezione
-            const menu = document.getElementById(`color-options-${idProdotto}`);
-            menu.style.display = "none";
-            riga.classList.remove("row-open");
+        function selezionaColorazione(id, path, idCol) {
+            const img = document.getElementById(`preview-${id}`);
+            img.src = path;
+            img.dataset.idcol = idCol;
+            toggleColorMenu(id); // Chiude
         }
 
-        function aggiungiAlCarrello(idProdotto) {
-            let html = `
-                <table style="width:100%">
-                    <tr>
-                        <th>ID</th>
-                        <th>Immagine</th>
-                        <th>Prezzo</th>
-                        <th>Q.tà</th>
-                        <th></th>
-                    </tr>
-            `;
-            const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
-            const celle = riga.querySelectorAll("td");
-            const nome = celle[1].innerText;
-            const prezzo = parseFloat(celle[1].innerText);
-            const preview = document.getElementById(`color-preview-${idProdotto}`);
-            const colorazione = preview.src;
-            const idColorazione = preview.dataset.idcolorazione;
-            if (!idColorazione) {
-                alert("Seleziona una colorazione prima di aggiungere al carrello.");
-                return;
-            }
-            const esistente = carrello.find(x => x.id === idProdotto && x.idColorazione === idColorazione);
-            if (esistente) {
-                esistente.quantita++;
-            } else {
-                carrello.push({
-                    id: idProdotto,
-                    idColorazione: idColorazione,
-                    nome,
-                    colorazione,
-                    prezzo,
-                    quantita: 1
-                });
-            }
+        function aggiungiAlCarrello(id) {
+            const p = prodottiCache.find(x => x.id == id);
+            const colImg = document.getElementById(`preview-${id}`);
+            const idCol = colImg.dataset.idcol;
+
+            if (!idCol) return alert("Seleziona colore");
+
+            const exist = carrello.find(c => c.idCol === idCol);
+            if (exist) exist.qta++;
+            else carrello.push({ id, idCol, img: colImg.src, nome: p.prodotto, prezzo: p.prezzo || 0, qta: 1 });
+            
             aggiornaCarrello();
         }
 
         function aggiornaCarrello() {
-            if (carrello.length === 0) {
-                document.getElementById("carrelloContainer").innerHTML = "<p>Carrello vuoto</p>";
-                return;
-            }
+            const cont = document.getElementById("carrelloContainer");
+            if (!carrello.length) return cont.innerHTML = "<p>Carrello vuoto</p>";
 
-            let html = "<table><tr><th>Colorazione ID</th><th>Immagine</th><th>Prezzo</th><th>Q.tà</th><th></th></tr>";
-
-            carrello.forEach((item, index) => {
-                html += `
-                    <tr>
-                        <td>${item.idColorazione}</td>
-                        <td><img src="${item.colorazione}" style="width:100px;height:70px;object-fit:contain;border-radius:6px;"></td>
-                         <td>
-                        <input type="number"
-                                class="prezzo-input"
-                                value="${item.prezzo}"
-                                min="0"
-                                step="0.01"
-                                data-index="${index}">
-                        </td>
-                        <td>
-                            <input type="number" min="1" value="${item.quantita}" 
-                                onchange="cambiaQuantita(${index}, this.value)">
-                        </td>
-                        <td><button onclick="rimuoviDalCarrello(${index})">X</button></td>
-                    </tr>
-                `;
+            let h = `<table><tr><th>Img</th><th>Prezzo</th><th>Q.ta</th><th>X</th></tr>`;
+            carrello.forEach((c, i) => {
+                h += `<tr>
+                    <td><img src="${c.img}" style="width:50px"></td>
+                    <td><input type="number" value="${c.prezzo}" step="0.1" onchange="carrello[${i}].prezzo=this.value" style="width:50px"></td>
+                    <td><input type="number" value="${c.qta}" onchange="carrello[${i}].qta=this.value" style="width:40px"></td>
+                    <td><button onclick="carrello.splice(${i},1);aggiornaCarrello()">X</button></td>
+                </tr>`;
             });
-
-            html += "</table>";
-
-            document.getElementById("carrelloContainer").innerHTML = html;
-        }
-
-        function cambiaQuantita(index, nuovaQta) {
-            carrello[index].quantita = parseInt(nuovaQta);
-            aggiornaCarrello();
-        }
-
-        function rimuoviDalCarrello(index) {
-            carrello.splice(index, 1);
-            aggiornaCarrello();
+            cont.innerHTML = h + `</table>`;
         }
 
         async function confermaVendita() {
-            if (carrello.length === 0) {
-                alert("Il carrello è vuoto.");
-                return;
-            }
+            const dest = document.getElementById("Destinatario").value;
+            const dataV = document.getElementById("dataVendita").value;
+            if (!carrello.length || !dest) return alert("Dati mancanti");
 
-            const nomeCliente = document.getElementById("Destinatario").value.trim();
-            const dataVendita = document.getElementById("dataVendita").value;
-
-            if (!nomeCliente) {
-                alert("Inserisci il nome del cliente.");
-                return;
-            }
-
-            let righeDaInserire = [];
-
-            // Per ogni elemento del carrello...
-            carrello.forEach(item => {
-                // ...creo N righe, dove N = quantità
-                for (let i = 0; i < item.quantita; i++) {
-                    righeDaInserire.push({
-                        colorazioneid: item.idColorazione,
-                        prezzo: item.prezzo,
-                        destinatario: nomeCliente,
-                        data: dataVendita
-                    });
-                }
+            const rows = [];
+            carrello.forEach(c => {
+                for(let i=0; i<c.qta; i++) rows.push({ colorazioneid: c.idCol, prezzo: c.prezzo, destinatario: dest, data: dataV });
             });
 
-            console.log(righeDaInserire);
-
-            // Inserimento multiplo in Supabase
-            const { data, error } = await client
-                .from("vendite")
-                .insert(righeDaInserire);
-
-            if (error) {
-                console.error("Errore durante il salvataggio:", error);
-                alert("Errore durante il salvataggio.");
-                return;
-            }
-
-            // Tutto ok → torna alla pagina vendite
-            window.location.href = "page_vendite.html";
+            const { error } = await client.from("vendite").insert(rows);
+            if (error) alert("Errore"); else window.location.href = "page_vendite.html";
         }
 
-        document.addEventListener("click", function (e) {
-            // Se il click NON è sopra un'immagine di anteprima e NON è dentro un menu opzioni
+        // Chiudi se clicchi fuori
+        document.addEventListener("click", e => {
             if (!e.target.closest('.color-select-display') && !e.target.closest('.color-select-options')) {
-                document.querySelectorAll(".color-select-options").forEach(menu => {
-                    menu.style.display = "none";
-                });
-                document.querySelectorAll("tr").forEach(riga => {
-                    riga.classList.remove("row-open");
-                });
+                document.querySelectorAll(".color-select-options").forEach(m => m.style.display = "none");
+                document.querySelectorAll("tr").forEach(r => r.classList.remove("row-open"));
             }
         });
-
-        
     </script>
-
 </body>
 </html>
