@@ -14,7 +14,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: rgb(160, 100, 26);
+            background: rgb(255, 255, 255);
             color: #f5f5f5;
         }
 
@@ -655,40 +655,37 @@ tr.row-open td {
         function toggleColorMenu(idProdotto) {
             const menu = document.getElementById(`color-options-${idProdotto}`);
             const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
-            const isOpen = menu.style.display === "flex";
+            
+            // Verifichiamo lo stato attuale PRIMA di chiudere tutto
+            const isAlreadyOpen = menu.style.display === "flex";
 
-            // Chiudi TUTTI i menu aperti e resetta TUTTE le righe
+            // 1. Chiudiamo TUTTI i menu e resettiamo tutte le righe
             document.querySelectorAll(".color-select-options").forEach(m => {
                 m.style.display = "none";
             });
             document.querySelectorAll("tr").forEach(r => {
                 r.classList.remove("row-open");
-                r.style.zIndex = "auto"; // Reset z-index
             });
 
-            if (!isOpen) {
+            // 2. Se il menu cliccato NON era aperto, lo apriamo
+            if (!isAlreadyOpen) {
                 menu.style.display = "flex";
                 riga.classList.add("row-open");
-                riga.style.zIndex = "999"; // Solleva la riga attiva
             }
         }
 
         function selezionaColorazione(idProdotto, imgPath, idColorazione) {
-            console.log("Hai premuto il pulsante con:", idProdotto);
-            console.log("Hai premuto il pulsante con:", imgPath);
-            console.log("Hai premuto il pulsante con:", idColorazione);
             const preview = document.getElementById(`color-preview-${idProdotto}`);
-            // aggiorna immagine
             preview.src = imgPath;
-            // 🔥 salva l'id della colorazione selezionata
             preview.dataset.idcolorazione = idColorazione;
-            // 🔥 salva anche sulla riga (più robusto)
+
             const riga = document.querySelector(`tr[data-id="${idProdotto}"]`);
             riga.dataset.colorazioneSelezionata = idColorazione;
-            // chiudi menu
+            
+            // CHIUDI TUTTO dopo la selezione
             const menu = document.getElementById(`color-options-${idProdotto}`);
             menu.style.display = "none";
-            menu.style.pointerEvents = "none";
+            riga.classList.remove("row-open");
         }
 
         function aggiungiAlCarrello(idProdotto) {
@@ -821,14 +818,15 @@ tr.row-open td {
         }
 
         document.addEventListener("click", function (e) {
-            const tuttiMenu = document.querySelectorAll(".color-select-options");
-
-            tuttiMenu.forEach(menu => {
-                if (!menu.contains(e.target) && !menu.previousElementSibling.contains(e.target)) {
+            // Se il click NON è sopra un'immagine di anteprima e NON è dentro un menu opzioni
+            if (!e.target.closest('.color-select-display') && !e.target.closest('.color-select-options')) {
+                document.querySelectorAll(".color-select-options").forEach(menu => {
                     menu.style.display = "none";
-                    menu.style.pointerEvents = "none";
-                }
-            });
+                });
+                document.querySelectorAll("tr").forEach(riga => {
+                    riga.classList.remove("row-open");
+                });
+            }
         });
 
         
