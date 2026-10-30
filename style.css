@@ -700,16 +700,15 @@ table.sales td.prezzo { font-weight: 800; white-space: nowrap; }
 
 /* ---------- Statistiche: classifica dei più venduti ---------- */
 .tabs.two { grid-template-columns: repeat(2, 1fr); }
-table.stats-list td { padding: 10px 8px; vertical-align: middle; }
-table.stats-list td.pos { width: 36px; text-align: center; font-weight: 800; color: var(--muted); }
-table.stats-list td.foto { width: 96px; }
-table.stats-list td.foto img { width: 88px; height: 88px; }
-table.stats-list td.foto .no-img {
-    width: 88px; height: 88px; border-radius: 8px; background: var(--surface-2);
-    display: flex; align-items: center; justify-content: center; padding: 6px;
-    font-size: 11px; line-height: 1.2; text-align: center; color: var(--muted);
-    overflow: hidden; overflow-wrap: anywhere;
-}
-table.stats-list td.qta { text-align: right; font-size: 15px; color: var(--muted); white-space: nowrap; }
-table.stats-list td.qta strong { font-size: 24px; font-weight: 800; color: var(--text); margin-right: 2px; }
-.tabs.two { grid-template-columns: repeat(2, 1fr); }
+table.stats-list td { padding: 10px 6px; vertical-align: middle; }
+table.stats-list th.num { text-align: right; }
+table.stats-list td.pos { width: 28px; text-align: center; font-weight: 800; color: var(--muted); }
+table.stats-list td.foto { width: 76px; }
+table.stats-list td.foto img { width: 68px; height: 68px; }
+table.stats-list td.foto .no-img { width: 68px; height: 68px; border-radius: 8px; background: var(--surface-2); }
+table.stats-list td.desc { font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+table.stats-list td.qta { text-align: right; font-size: 22px; font-weight: 800; white-space: nowrap; }
+
+/* ---------- Intestazioni ordinabili ---------- */
+th.sortable { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+th.sortable .freccia { color: var(--accent); font-size: 11px; }

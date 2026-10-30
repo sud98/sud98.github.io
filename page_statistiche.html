@@ -54,14 +54,21 @@
     async function caricaStatistiche() {
         try {
             const vendite = await leggiVendite();
-            const { data: colorazioni, error } = await client
-                .from("colorazioni")
-                .select("id, percorsoimmagine");
+            const [{ data: colorazioni, error }, { data: prodotti, error: errProd }] = await Promise.all([
+                client.from("colorazioni").select("id, prodottoid, descrizione, percorsoimmagine"),
+                client.from("prodotti").select("id, descrizione")
+            ]);
             if (error) throw error;
+            if (errProd) throw errProd;
 
-            const foto = {};
+            const descProdotto = {};
+            for (const p of prodotti) descProdotto[p.id] = p.descrizione || "";
+
+            // Descrizione = prodotto · colore (es. "Zucchetta · Arancione")
+            const foto = {}, desc = {};
             for (const c of colorazioni) {
                 if (!foto[c.id] && c.percorsoimmagine) foto[c.id] = c.percorsoimmagine;
+                if (!desc[c.id]) desc[c.id] = [descProdotto[c.prodottoid], c.descrizione].filter(Boolean).join(" · ");
             }
 
             const conteggi = {};
@@ -70,7 +77,11 @@
                 conteggi[id] = (conteggi[id] || 0) + 1;
             }
 
-            classifica = Object.entries(conteggi).map(([id, n]) => ({ id, n, foto: foto[id] }));
+            classifica = Object.entries(conteggi).map(([id, n]) => ({
+                id, n, foto: foto[id],
+                // Le vendite manuali non hanno colorazione: il testo salvato è già la descrizione
+                desc: desc[id] || id
+            }));
             mostra();
         } catch (e) {
             console.error(e);
@@ -89,16 +100,16 @@
             ordine === "desc" ? b.n - a.n : a.n - b.n
         );
 
-        // Senza foto (vendite manuali) mostro la descrizione al posto dell'immagine
-        let html = `<table class="stats-list"><tbody>`;
+        let html = `<table class="stats-list"><thead><tr><th>#</th><th>Foto</th><th>Descrizione</th><th class="num">Venduti</th></tr></thead><tbody>`;
         righe.forEach((r, i) => {
             const img = r.foto
                 ? `<img src="${r.foto}" alt="" loading="lazy">`
-                : `<div class="no-img">${r.id}</div>`;
+                : `<div class="no-img"></div>`;
             html += `<tr>
                 <td class="pos">${i + 1}</td>
                 <td class="foto">${img}</td>
-                <td class="qta"><strong>${r.n}</strong> ${r.n === 1 ? "venduto" : "venduti"}</td>
+                <td class="desc">${r.desc}</td>
+                <td class="qta">${r.n}</td>
             </tr>`;
         });
         html += "</tbody></table>";

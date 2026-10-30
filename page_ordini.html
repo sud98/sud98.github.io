@@ -32,13 +32,13 @@
         </select>
         <input type="date" id="filtro_data" onchange="filterOrdini()" aria-label="Data di scadenza">
     </div>
-    <p class="hint">Tocca un ordine per selezionarlo, poi premi «Apri». Tocca ✔ / ✘ per cambiare il pagamento.</p>
+    <p class="hint">Tocca un ordine per selezionarlo, poi premi «Apri». Tocca ✔ / ✘ per cambiare il pagamento. Tocca «Destinatario» o «Scadenza» per ordinare.</p>
     <div class="table-wrap">
         <table id="table_ordini">
             <thead>
                 <tr>
-                    <th>Destinatario</th>
-                    <th>Scadenza</th>
+                    <th class="sortable" data-campo="destinatario" onclick="ordinaPer('destinatario')">Destinatario <span class="freccia"></span></th>
+                    <th class="sortable" data-campo="scadenza_consegna" onclick="ordinaPer('scadenza_consegna')">Scadenza <span class="freccia">▲</span></th>
                     <th>Stato</th>
                     <th>Pagato</th>
                 </tr>
@@ -64,6 +64,9 @@
 
     let ordiniCache = [];
     let ordineSelezionato = null;
+    // Ordinamento della tabella (solo visualizzazione)
+    let campoOrdine = "scadenza_consegna";
+    let crescente = true;
 
     window.onload = async () => {
         await loadOrdini();
@@ -96,6 +99,11 @@
             .filter(o => !fDest || o.destinatario.toLowerCase().includes(fDest))
             .filter(o => !fStato || o.stato === fStato)
             .filter(o => !fData || o.scadenza_consegna === fData)
+            .sort((a, b) => {
+                const va = a[campoOrdine] ?? "", vb = b[campoOrdine] ?? "";
+                const cmp = String(va).localeCompare(String(vb), "it", { sensitivity: "base" });
+                return crescente ? cmp : -cmp;
+            })
             .forEach(row => {
                 const tr = document.createElement("tr");
 
@@ -193,6 +201,17 @@
         if (data && data.length > 0) {
             await db.from("vendite").delete().eq("id", data[0].id);
         }
+    }
+
+    // Tocco sull'intestazione: stesso campo = inverte, campo nuovo = crescente
+    function ordinaPer(campo) {
+        crescente = campo === campoOrdine ? !crescente : true;
+        campoOrdine = campo;
+        document.querySelectorAll("#table_ordini th.sortable").forEach(th => {
+            th.querySelector(".freccia").textContent =
+                th.dataset.campo === campoOrdine ? (crescente ? "▲" : "▼") : "";
+        });
+        renderOrdini();
     }
 
     function filterOrdini() {
