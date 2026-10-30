@@ -2,245 +2,63 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prodotti</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Prodotti · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        /* --- STILE GENERALE --- */
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f5f5f5;
-            padding: 20px;
-            margin: 0;
-        }
-
-        /* --- TITOLO --- */
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 26px;
-        }
-
-        /* --- FILTRI --- */
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        select,
-        input[type="text"] {
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background: #222;
-            color: #fff;
-            font-size: 15px;
-            box-sizing: border-box;
-        }
-
-        /* --- CONTENITORE TABELLA --- */
-        .table-container {
-            max-height: 75vh;
-            overflow-y: auto;
-            border: 1px solid #333;
-            border-radius: 8px;
-            background: #1b1b1b;
-        }
-
-        /* --- TABELLA --- */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #222;
-            table-layout: fixed;
-        }
-
-        table th:nth-child(2),
-        table td:nth-child(2),
-        table th:nth-child(3),
-        table td:nth-child(3),
-        table th:nth-child(4),
-        table td:nth-child(4) {
-            display: none;
-        }
-
-
-        th, td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #333;
-            font-size: 15px;
-            word-wrap: break-word;
-            white-space: normal;
-        }
-
-        th {
-            background: #333;
-            text-align: left;
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            font-weight: bold;
-        }
-
-        /* Hover riga */
-        tr:hover {
-            background: #2a2a2a;
-            cursor: pointer;
-        }
-
-        /* Celle editabili */
-        td[contenteditable="true"] {
-            background: #1b1b1b;
-            border-radius: 4px;
-        }
-
-        /* Immagini */
-        img {
-            max-width: 55px;
-            max-height: 55px;
-            object-fit: contain;
-            display: block;
-            margin: auto;
-        }
-
-        /* --- BOTTONI --- */
-        .buttons {
-            margin-top: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        button {
-            padding: 10px 18px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .btn-brochure { background: #5bc0de; color: #fff; }
-        .btn-add      { background: #5cb85c; color: #fff; }
-        .btn-del      { background: #d9534f; color: #fff; }
-
-        /* --- RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-
-            h1 {
-                font-size: 22px;
-            }
-
-            .filters {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-
-            select,
-            input[type="text"] {
-                font-size: 14px;
-                padding: 8px;
-            }
-
-            th, td {
-                padding: 6px;
-                font-size: 13px;
-            }
-
-            img {
-                max-width: 45px;
-                max-height: 45px;
-            }
-
-            .buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            button {
-                width: 100%;
-                padding: 14px;
-                font-size: 17px;
-            }
-        }
-
-        /* Pulsante freccia indietro */
-        .back-button {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            font-size: 28px;
-            font-weight: bold;
-            background: #1b1b1b;
-            color: #5bc0de;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 6px 12px;
-            cursor: pointer;
-            z-index: 999;
-            transition: 0.2s;
-        }
-
-        .back-button:hover {
-            background: #2a2a2a;
-            color: #ffffff;
-        }
-        
-    </style>
 </head>
-
-<body>
-
-<div class="back-button" onclick="window.location.href = 'index.html'">←</div>
-<h1>Prodotti</h1>
-
-<!-- FILTRI -->
-<div class="filters">
-    <select id="filtro_prodotto" onchange="filterProdotti()">
-        <option value="">Tutti i prodotti</option>
-    </select>
-
-    <select id="filtro_tipologia" onchange="filterProdotti()">
-        <option value="">Tutte le tipologie</option>
-    </select>
-
-    <select id="filtro_tema" onchange="filterProdotti()">
-        <option value="">Tutti i temi</option>
-    </select>
-
-    <input type="text" id="filtro_descrizione" placeholder="Filtra per descrizione..." oninput="filterProdotti()">
-</div>
-
-<!-- TABELLA SCROLLABILE -->
-<div class="table-container">
-    <table id="table_prodotti">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Prodotto</th>
-                <th>Tipologia</th>
-                <th>Tema</th>
-                <th>Descrizione</th>
-                <th>Prezzo</th>
-                <th>Immagine</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
-
-<!-- PULSANTI -->
-<div class="buttons">
-    <button class="btn-brochure" onclick="creaBrochure()">Crea Brochure</button>
-    <button class="btn-add" onclick="vaiAggiungiProdotto()">Aggiungi</button>
-    <button class="btn-del" onclick="eliminaProdotto()">Elimina</button>
-</div>
-
+<body class="app-list">
+<header class="app-header">
+    <a class="icon-btn" href="index.html" aria-label="Torna alla home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Prodotti</h1>
+</header>
+<main class="page">
+    <div class="filters">
+        <select id="filtro_prodotto" onchange="filterProdotti()">
+            <option value="">Tutti i prodotti</option>
+        </select>
+        <select id="filtro_tipologia" onchange="filterProdotti()">
+            <option value="">Tutte le tipologie</option>
+        </select>
+        <select id="filtro_tema" onchange="filterProdotti()">
+            <option value="">Tutti i temi</option>
+        </select>
+        <input type="text" id="filtro_descrizione" placeholder="Cerca..." oninput="filterProdotti()">
+    </div>
+    <p class="hint">Tocca un prodotto per selezionarlo. Descrizione e prezzo si modificano toccandoli.</p>
+    <div class="table-wrap wide">
+        <table id="table_prodotti">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Prodotto</th>
+                    <th>Tipologia</th>
+                    <th>Tema</th>
+                    <th>Descrizione</th>
+                    <th>Prezzo</th>
+                    <th>Immagine</th>
+                </tr>
+            </thead>
+            <tbody><tr><td colspan="7" class="loading">Caricamento…</td></tr></tbody>
+        </table>
+    </div>
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-danger" onclick="eliminaProdotto()">Elimina</button>
+        <button class="btn btn-secondary" onclick="apriProdottoSelezionato()">Colori</button>
+        <button class="btn btn-primary" onclick="vaiAggiungiProdotto()">+ Nuovo</button>
+    </div>
+</footer>
 <script>
     const { createClient } = supabase;
 
@@ -376,9 +194,9 @@
 
     function evidenziaRiga(trSelezionata) {
         document.querySelectorAll("#table_prodotti tbody tr").forEach(tr => {
-            tr.style.backgroundColor = "";
+            tr.classList.remove("selezionata");
         });
-        trSelezionata.style.backgroundColor = "#444";
+        trSelezionata.classList.add("selezionata");
     }
 
     /* ============================
@@ -453,6 +271,13 @@
         console.log("Funzione brochure non ancora implementata");
     }
 
+    function apriProdottoSelezionato() {
+        if (!prodottoSelezionato) {
+            alert("Seleziona un prodotto dalla tabella");
+            return;
+        }
+        apriColorazioni(prodottoSelezionato.id);
+    }
     function apriColorazioni(idProdotto) { 
         window.location.href = "page_colorazioni.html?id=" + idProdotto;
     }

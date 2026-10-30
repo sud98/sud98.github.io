@@ -1,20 +1,26 @@
 {
-  "name": "Monitor Vendite",
-  "short_name": "Vendite",
-  "start_url": "/",
+  "name": "GE WoodArt",
+  "short_name": "WoodArt",
+  "description": "Gestione ordini, vendite, acquisti e prodotti di GE WoodArt",
+  "lang": "it",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "orientation": "portrait",
+  "background_color": "#121110",
+  "theme_color": "#121110",
   "icons": [
     {
-      "src": "Logo_Woodart_GE.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "pinco.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

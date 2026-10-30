@@ -2,277 +2,112 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Sigle</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sigle · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        /* --- STILE GENERALE --- */
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f5f5f5;
-            padding: 20px;
-            margin: 0;
-        }
-
-        /* --- LAYOUT A 3 COLONNE --- */
-        .container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-        }
-
-        /* --- BOX --- */
-        .box {
-            background: #1b1b1b;
-            padding: 18px;
-            border-radius: 10px;
-            border: 1px solid #333;
-            box-shadow: 0 0 10px rgba(0,0,0,0.4);
-        }
-
-        /* --- TITOLI --- */
-        h2 {
-            margin-top: 0;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        /* --- TABELLE --- */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-            background: #222;
-            border-radius: 6px;
-            overflow: hidden;
-            table-layout: fixed;
-        }
-
-        th, td {
-            padding: 8px;
-            border-bottom: 1px solid #333;
-            font-size: 15px;
-            word-wrap: break-word;
-            white-space: normal;
-        }
-
-        th {
-            background: #333;
-            font-weight: bold;
-        }
-
-        /* --- INPUT E SELECT --- */
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background: #222;
-            color: #fff;
-            font-size: 15px;
-            box-sizing: border-box;
-        }
-
-        /* --- RIGHE DI INPUT --- */
-        .row {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .row > div {
-            flex: 1;
-        }
-
-        /* --- BOTTONI --- */
-        .buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        button {
-            flex: 1;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 15px;
-        }
-
-        .btn-add {
-            background: #5cb85c;
-            color: white;
-        }
-
-        .btn-del {
-            background: #d9534f;
-            color: white;
-        }
-
-        /* --- RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-
-            .container {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            h2 {
-                font-size: 20px;
-            }
-
-            th, td {
-                padding: 6px;
-                font-size: 14px;
-            }
-
-            input, select {
-                padding: 9px;
-                font-size: 14px;
-            }
-
-            .row {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            button {
-                width: 100%;
-                padding: 14px;
-                font-size: 16px;
-            }
-        }
-        
-        /* Pulsante freccia indietro */
-        .back-button {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            font-size: 28px;
-            font-weight: bold;
-            background: #1b1b1b;
-            color: #5bc0de;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 6px 12px;
-            cursor: pointer;
-            z-index: 999;
-            transition: 0.2s;
-        }
-
-        .back-button:hover {
-            background: #2a2a2a;
-            color: #ffffff;
-        }
-        
-    </style>
 </head>
-
-<body>
-
-<div class="container">
-
-    <!-- ============================
-         COLONNA PRODOTTI
-    ============================= -->
-    <div class="box">
-        <div class="back-button" onclick="window.location.href = 'index.html'">←</div>
-        <h2>Prodotti</h2>
-
-        <input id="filter_prodotti" placeholder="Filtra..." oninput="filterProdotti()">
-
-        <table id="table_prodotti">
-            <thead>
-                <tr>
-                    <th>Prodotto</th>
-                    <th>Sigla</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-
-        <div class="row">
-            <div><input id="prod_codice" placeholder="Prodotto" oninput="this.value = this.value.toUpperCase()"></div>
-            <div><input id="prod_sigla" maxlength="3" placeholder="Sigla" oninput="this.value = this.value.toUpperCase()"></div>
-        </div>
-
-        <div class="buttons">
-            <button class="btn-add" onclick="addProdotto()">Aggiungi</button>
-            <button class="btn-del" onclick="deleteProdotto()">Elimina</button>
-        </div>
+<body class="app-list">
+<header class="app-header">
+    <a class="icon-btn" href="index.html" aria-label="Torna alla home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Sigle</h1>
+</header>
+<main class="page">
+    <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="tab-prodotti" onclick="apriScheda(this)">Prodotti</button>
+        <button class="tab" data-tab="tab-tipologie" onclick="apriScheda(this)">Tipologie</button>
+        <button class="tab" data-tab="tab-temi" onclick="apriScheda(this)">Temi</button>
     </div>
 
-
-    <!-- ============================
-         COLONNA TIPOLOGIE
-    ============================= -->
-    <div class="box">
-        <h2>Tipologie</h2>
-
-        <input id="filter_tipologie" placeholder="Filtra..." oninput="filterTipologie()">
-
-        <table id="table_tipologie">
-            <thead>
-                <tr>
-                    <th>Prodotto</th>
-                    <th>Tipologia</th>
-                    <th>Sigla</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-
-        <div class="row">
-            <div><select id="tip_prod"></select></div>
-            <div><input id="tip_codice" placeholder="Tipologia" oninput="this.value = this.value.toUpperCase()"></div>
-            <div><input id="tip_sigla" maxlength="3" placeholder="Sigla" oninput="this.value = this.value.toUpperCase()"></div>
+    <!-- PRODOTTI -->
+    <section class="tab-panel active" id="tab-prodotti">
+        <input id="filter_prodotti" placeholder="Cerca..." oninput="filterProdotti()">
+        <div class="table-wrap">
+            <table id="table_prodotti">
+                <thead><tr><th>Prodotto</th><th>Sigla</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-
-        <div class="buttons">
-            <button class="btn-add" onclick="addTipologia()">Aggiungi</button>
-            <button class="btn-del" onclick="deleteTipologia()">Elimina</button>
+        <div class="card card-pad form">
+            <p class="hint">Tocca una riga e premi Elimina per toglierla, oppure scrivi un nuovo prodotto e premi Aggiungi.</p>
+            <div class="sigla-form">
+                <input id="prod_codice" placeholder="Prodotto" oninput="this.value = this.value.toUpperCase()">
+                <input id="prod_sigla" maxlength="3" placeholder="Sigla" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-danger" onclick="deleteProdotto()">Elimina</button>
+                <button class="btn btn-primary" onclick="addProdotto()">Aggiungi</button>
+            </div>
         </div>
-    </div>
+    </section>
 
-
-    <!-- ============================
-         COLONNA TEMI
-    ============================= -->
-    <div class="box">
-        <h2>Temi</h2>
-
-        <input id="filter_temi" placeholder="Filtra..." oninput="filterTemi()">
-
-        <table id="table_temi">
-            <thead>
-                <tr>
-                    <th>Tema</th>
-                    <th>Sigla</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-
-        <div class="row">
-            <div><input id="tema_codice" placeholder="Tema" oninput="this.value = this.value.toUpperCase()"></div>
-            <div><input id="tema_sigla" maxlength="3" placeholder="Sigla" oninput="this.value = this.value.toUpperCase()"></div>
+    <!-- TIPOLOGIE -->
+    <section class="tab-panel" id="tab-tipologie">
+        <input id="filter_tipologie" placeholder="Cerca..." oninput="filterTipologie()">
+        <div class="table-wrap">
+            <table id="table_tipologie">
+                <thead><tr><th>Prodotto</th><th>Tipologia</th><th>Sigla</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-
-        <div class="buttons">
-            <button class="btn-add" onclick="addTema()">Aggiungi</button>
-            <button class="btn-del" onclick="deleteTema()">Elimina</button>
+        <div class="card card-pad form">
+            <p class="hint">Tocca una riga e premi Elimina per toglierla, oppure scrivi una nuova tipologia e premi Aggiungi.</p>
+            <div class="sigla-form three">
+                <select id="tip_prod" aria-label="Prodotto"></select>
+                <input id="tip_codice" placeholder="Tipologia" oninput="this.value = this.value.toUpperCase()">
+                <input id="tip_sigla" maxlength="3" placeholder="Sigla" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-danger" onclick="deleteTipologia()">Elimina</button>
+                <button class="btn btn-primary" onclick="addTipologia()">Aggiungi</button>
+            </div>
         </div>
-    </div>
+    </section>
 
-</div>
-
+    <!-- TEMI -->
+    <section class="tab-panel" id="tab-temi">
+        <input id="filter_temi" placeholder="Cerca..." oninput="filterTemi()">
+        <div class="table-wrap">
+            <table id="table_temi">
+                <thead><tr><th>Tema</th><th>Sigla</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="card card-pad form">
+            <p class="hint">Tocca una riga e premi Elimina per toglierla, oppure scrivi un nuovo tema e premi Aggiungi.</p>
+            <div class="sigla-form">
+                <input id="tema_codice" placeholder="Tema" oninput="this.value = this.value.toUpperCase()">
+                <input id="tema_sigla" maxlength="3" placeholder="Sigla" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-danger" onclick="deleteTema()">Elimina</button>
+                <button class="btn btn-primary" onclick="addTema()">Aggiungi</button>
+            </div>
+        </div>
+    </section>
+</main>
+<script>
+    // Cambio scheda e riga evidenziata (solo grafica)
+    function apriScheda(btn) {
+        document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === btn));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === btn.dataset.tab));
+    }
+    document.addEventListener("click", e => {
+        const tr = e.target.closest("tbody tr");
+        if (!tr) return;
+        tr.parentElement.querySelectorAll("tr").forEach(r => r.classList.remove("selezionata"));
+        tr.classList.add("selezionata");
+    });
+</script>
 <script>
     const { createClient } = supabase;
     const db = createClient(
@@ -347,6 +182,7 @@
             alert("Seleziona un prodotto");
             return;
         }
+        if (!confirm("Vuoi eliminare " + codice + "?")) return;
 
         const { error } = await db
             .from("sigla_prodotto")
@@ -443,6 +279,7 @@
             alert("Seleziona una tipologia");
             return;
         }
+        if (!confirm("Vuoi eliminare " + codice + "?")) return;
 
         const { error } = await db
             .from("sigla_tipologia")
@@ -524,6 +361,7 @@
             alert("Seleziona un tema");
             return;
         }
+        if (!confirm("Vuoi eliminare " + codice + "?")) return;
 
         const { error } = await db
             .from("sigla_tema")

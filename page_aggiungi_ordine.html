@@ -2,114 +2,49 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aggiungi Ordine</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Nuovo ordine · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        /* --- STILE GENERALE --- */
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f5f5f5;
-            padding: 20px;
-            margin: 0;
-        }
-
-        /* --- TITOLO --- */
-        h1 {
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 26px;
-        }
-
-        /* --- FORM CONTAINER --- */
-        .form {
-            max-width: 500px;
-            margin: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        /* --- INPUT E SELECT --- */
-        input, select {
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background: #222;
-            color: #fff;
-            font-size: 17px;
-            box-sizing: border-box; /* evita sbordi */
-        }
-
-        /* --- BOTTONI --- */
-        button {
-            padding: 12px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 17px;
-            font-weight: bold;
-        }
-
-        .btn-save {
-            background: #5cb85c;
-            color: white;
-        }
-
-        .btn-back {
-            background: #5bc0de;
-            color: white;
-        }
-
-        /* --- RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-
-            body {
-                padding: 10px;
-            }
-
-            h1 {
-                font-size: 22px;
-                margin-bottom: 20px;
-            }
-
-            input, select {
-                font-size: 16px;
-                padding: 9px;
-            }
-
-            button {
-                width: 100%;
-                padding: 14px;
-                font-size: 17px;
-            }
-
-            .form {
-                gap: 12px;
-            }
-        }
-
-    </style>
 </head>
-
 <body>
-
-<h1>Nuovo Ordine</h1>
-
-<div class="form">
-    <input type="text" id="destinatario" placeholder="Destinatario">
-    <label>Data creazione ordine:</label>
-    <input type="date" id="creazione">
-    <label>Data scadenza ordine:</label>
-    <input type="date" id="scadenza">
-
-    <button class="btn-save" onclick="salvaOrdine()">Salva Ordine</button>
-    <button class="btn-back" onclick="indietro()">Indietro</button>
-</div>
-
+<header class="app-header">
+    <button class="icon-btn" onclick="indietro()" aria-label="Indietro"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1>Nuovo ordine</h1>
+</header>
+<main class="page page-narrow">
+    <form class="card card-pad form" onsubmit="return false">
+        <div class="field">
+            <label for="destinatario">Destinatario</label>
+            <input type="text" id="destinatario" placeholder="Nome e cognome" autocomplete="off">
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="creazione">Data ordine</label>
+                <input type="date" id="creazione">
+            </div>
+            <div class="field">
+                <label for="scadenza">Consegna entro</label>
+                <input type="date" id="scadenza">
+            </div>
+        </div>
+    </form>
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-secondary" onclick="indietro()">Annulla</button>
+        <button class="btn btn-primary" onclick="salvaOrdine()">Salva ordine</button>
+    </div>
+</footer>
 <script>
     const { createClient } = supabase;
 
@@ -119,7 +54,6 @@
     );
 
     document.addEventListener("DOMContentLoaded", function () {
-        caricaProdotti();
         const oggi = new Date().toISOString().split("T")[0];
         document.getElementById("creazione").value = oggi;
     });

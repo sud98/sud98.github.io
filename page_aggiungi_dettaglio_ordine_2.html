@@ -2,176 +2,48 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aggiungi Dettaglio Ordine</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Prodotto manuale · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        /* --- STILE GENERALE --- */
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f5f5f5;
-            padding: 20px;
-            margin: 0;
-        }
-
-        /* --- CONTENITORE CENTRALE --- */
-        .container {
-            max-width: 500px;
-            margin: auto;
-            background: #1b1b1b;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #333;
-            box-shadow: 0 0 10px rgba(0,0,0,0.4);
-        }
-
-        /* --- TITOLO --- */
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 26px;
-        }
-
-        /* --- FRECCIA INDIETRO --- */
-        .arrow {
-            background: white;
-            border: none;
-            color: #5bc0de;
-            font-size: 28px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        /* --- LABEL E INPUT --- */
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 15px;
-            font-size: 18px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background: #222;
-            color: #fff;
-            font-size: 18px;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background: #222;
-            color: #fff;
-            font-size: 18px;
-            resize: vertical; /* permette di allargare solo in verticale */
-            min-height: 120px; /* altezza iniziale maggiore */
-        }
-
-
-        /* --- BOTTONI --- */
-        .buttons {
-            margin-top: 25px;
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        button {
-            padding: 12px 20px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .btn-add {
-            background: #5cb85c;
-            color: white;
-        }
-
-        .btn-cancel {
-            background: #d9534f;
-            color: white;
-        }
-
-        /* --- RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-
-            body {
-                padding: 10px;
-            }
-
-            .container {
-                padding: 15px;
-            }
-
-            h2 {
-                font-size: 22px;
-            }
-
-            label {
-                font-size: 16px;
-            }
-
-            input {
-                font-size: 16px;
-                padding: 10px;
-            }
-
-            .buttons {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-                font-size: 18px;
-                padding: 14px;
-            }
-
-            .arrow {
-                font-size: 26px;
-            }
-        }
-
-    </style>
 </head>
-
 <body>
-
-<div class="container">
-    <button class="arrow left" onclick="indietro()">&#8592;</button>
-    <h2>Aggiungi Dettaglio ordine</h2>
-
-    <form id="formAcquisto">
-
-        <label>Descrizione</label>
-        <input type="text" id="descrizione" required>
-
-        <label>Prezzo</label>
-        <input type="number" id="prezzo" step="0.01" required>
-
-        <label>Nota</label>
-        <textarea id="nota" rows="9" required></textarea>
-
-        <div class="buttons">
-            <button type="button" class="btn-add" onclick="aggiungiDettaglioOrdine()">Aggiungi</button>
-            <button type="button" class="btn-cancel" onclick="annulla()">Annulla</button>
+<header class="app-header">
+    <button class="icon-btn" onclick="indietro()" aria-label="Indietro"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1>Prodotto manuale</h1>
+</header>
+<main class="page page-narrow">
+    <form id="formAcquisto" class="card card-pad form" onsubmit="return false">
+        <p class="hint">Per articoli su misura o non presenti nel catalogo.</p>
+        <div class="field">
+            <label for="descrizione">Descrizione</label>
+            <input type="text" id="descrizione" required>
         </div>
-
+        <div class="field">
+            <label for="prezzo">Prezzo (€)</label>
+            <input type="number" id="prezzo" step="0.01" inputmode="decimal" required>
+        </div>
+        <div class="field">
+            <label for="nota">Nota</label>
+            <textarea id="nota" rows="6" required></textarea>
+        </div>
     </form>
-</div>
-
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button type="button" class="btn btn-secondary" onclick="annulla()">Annulla</button>
+        <button type="button" class="btn btn-primary" onclick="aggiungiDettaglioOrdine()">Aggiungi</button>
+    </div>
+</footer>
 <script>
     // Inizializza Supabase
     const { createClient } = supabase;

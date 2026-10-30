@@ -1,64 +1,50 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GE WoodArt</title>
-  
-  <!-- Manifest per PWA -->
-  <link rel="manifest" href="manifest.json">
-
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-    }
-
-    .logo {
-      width: 180px;
-      margin-bottom: 30px;
-    }
-
-    .btn {
-      display: block;
-      width: 80%;
-      max-width: 300px;
-      padding: 15px;
-      margin: 10px auto;
-      background: #333;
-      color: white;
-      border-radius: 10px;
-      font-size: 18px;
-      text-decoration: none;
-      transition: 0.2s;
-    }
-
-    .btn:hover {
-      background: #555;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>GE WoodArt</title>
+    <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
 </head>
-
 <body>
+<main class="home">
+    <img src="logo.png" alt="GE WoodArt" class="home-logo">
 
-  <!-- LOGO -->
-  <img src="Logo_Woodart_GE.png" alt="Logo GE WoodArt" class="logo">
-
-  <!-- NAVIGAZIONE -->
-  <a href="page_ordini.html" class="btn">Ordini</a>
-  <a href="page_vendite.html" class="btn">Vendite</a>
-  <a href="page_acquisti.html" class="btn">Acquisti</a>
-  <a href="page_prodotti.html" class="btn">Prodotti</a>
-  <a href="page_sigle.html" class="btn">Sigle</a>
-  <a href="page_resoconto.html" class="btn">Resoconto</a>
-
+    <nav class="tiles">
+        <a href="page_ordini.html" class="tile">
+            <svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h4"/></svg>
+            <span>Ordini<small>Da preparare e consegnare</small></span>
+        </a>
+        <a href="page_vendite.html" class="tile">
+            <svg viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg>
+            <span>Vendite<small>Cosa hai venduto</small></span>
+        </a>
+        <a href="page_acquisti.html" class="tile">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h12l2-8H6"/></svg>
+            <span>Acquisti<small>Spese e materiali</small></span>
+        </a>
+        <a href="page_prodotti.html" class="tile">
+            <svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8"/></svg>
+            <span>Prodotti<small>Catalogo e colori</small></span>
+        </a>
+        <a href="page_sigle.html" class="tile">
+            <svg viewBox="0 0 24 24"><path d="M5 9h14M5 15h14M10 3L8 21M16 3l-2 18"/></svg>
+            <span>Sigle<small>Codici prodotto</small></span>
+        </a>
+        <a href="page_resoconto.html" class="tile">
+            <svg viewBox="0 0 24 24"><path d="M3 20h18M6 16v-4M11 16V7M16 16v-6M20 16V4"/></svg>
+            <span>Resoconto<small>Entrate e uscite</small></span>
+        </a>
+    </nav>
+</main>
 </body>
 </html>

@@ -2,129 +2,46 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colorazioni Prodotto</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Colorazioni · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f5f5f5;
-            padding: 20px;
-            margin: 0;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 26px;
-        }
-
-        .table-container {
-            max-height: 60vh;
-            overflow-y: auto;
-            border: 1px solid #333;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            background: #1b1b1b;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #222;
-            table-layout: fixed;
-        }
-
-        th, td {
-            padding: 8px;
-            border-bottom: 1px solid #333;
-            font-size: 16px;
-            word-wrap: break-word;
-            white-space: normal;
-        }
-
-        th {
-            background: #333;
-            position: sticky;
-            top: 0;
-            z-index: 5;
-            font-weight: bold;
-        }
-
-        tr:hover {
-            background: #2a2a2a;
-            cursor: pointer;
-        }
-
-        td[contenteditable="true"] {
-            background: #1b1b1b;
-            border-radius: 4px;
-        }
-
-        img {
-            max-width: 70px;
-            max-height: 70px;
-            object-fit: contain;
-            display: block;
-            margin: auto;
-        }
-
-        .buttons {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        button {
-            padding: 10px 18px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .btn-back { background: #5bc0de; color: white; }
-        .btn-add  { background: #5cb85c; color: white; }
-        .btn-edit { background: #f0ad4e; color: white; }
-        .btn-del  { background: #d9534f; color: white; }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 22px; }
-            th, td { padding: 6px; font-size: 14px; }
-            img { max-width: 55px; max-height: 55px; }
-            .buttons { flex-direction: column; gap: 10px; }
-            button { width: 100%; padding: 14px; font-size: 17px; }
-        }
-    </style>
 </head>
-
-<body>
-
-<h1>Colorazioni</h1>
-
-<div class="table-container">
-    <table id="table_colori">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Descrizione</th>
-                <th>Immagine</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
-
-<div class="buttons">
-    <button class="btn-back" onclick="indietro()">Indietro</button>
-    <button class="btn-add" onclick="aggiungiColorazione()">Aggiungi</button>
-    <button class="btn-del" onclick="eliminaColorazione()">Elimina</button>
-</div>
-
+<body class="app-list">
+<header class="app-header">
+    <a class="icon-btn" href="page_prodotti.html" aria-label="Torna ai prodotti"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Colorazioni</h1>
+</header>
+<main class="page">
+    <p class="hint">Tocca la descrizione per modificarla. Tocca due volte l'immagine per sostituirla.</p>
+    <div class="table-wrap">
+        <table id="table_colori">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Descrizione</th>
+                    <th>Immagine</th>
+                </tr>
+            </thead>
+            <tbody><tr><td colspan="3" class="loading">Caricamento…</td></tr></tbody>
+        </table>
+    </div>
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-danger" onclick="eliminaColorazione()">Elimina</button>
+        <button class="btn btn-primary" onclick="aggiungiColorazione()">+ Aggiungi colore</button>
+    </div>
+</footer>
 <script>
     const { createClient } = supabase;
 
@@ -190,9 +107,9 @@
 
     function evidenziaRiga(trSel) {
         document.querySelectorAll("#table_colori tbody tr").forEach(tr => {
-            tr.style.backgroundColor = "";
+            tr.classList.remove("selezionata");
         });
-        trSel.style.backgroundColor = "#444";
+        trSel.classList.add("selezionata");
     }
 
     async function updateDescrizione(id, value) {

@@ -1,171 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <meta charset="utf-8" />
-    <title>Aggiungi Dettaglio Ordine</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Aggiungi prodotti · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        /* --- STILE GENERALE --- */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background: #111;
-            color: #f5f5f5;
-        }
-
-        /* --- TOPBAR --- */
-        .topbar {
-            width: 100%;
-            background: #1b1b1b;
-            border-bottom: 1px solid #333;
-            padding: 16px 0;
-        }
-        .topbar .topbar-button {
-            display: block;
-            width: 80%;
-            height: 80px;
-            border-radius: 8px;
-            border: none;
-            font-size: 38px;
-            text-align: center;
-            cursor: pointer;
-            background: #333;
-            color: white;
-            margin: 0 auto;
-        }
-
-        .titolo-pagina {
-            text-align: center;
-            font-size: 26px;
-            font-weight: bold;
-            margin: 12px 0;
-            color: white;
-        }
-
-        /* --- FILTRI --- */
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            padding: 10px;
-        }
-        .filters select, .filters input {
-            height: 45px;
-            font-size: 16px;
-            padding: 5px;
-            border-radius: 6px;
-            background: #222;
-            color: white;
-            border: 1px solid #444;
-        }
-
-        /* --- SEZIONI --- */
-        .section-prodotti { flex: 0 0 45%; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
-        .section-carrello { flex: 0 0 25%; overflow-y: auto; display: flex; flex-direction: column; background: #1a1a1a; }
-        .section-bottoni { flex: 0 0 10%; display: flex; align-items: center; justify-content: center; gap: 20px; padding: 10px; }
-
-        .scroll-box {
-            flex: 1;
-            width: 95%;
-            margin: auto;
-            background: #222;
-            border-radius: 8px;
-            padding: 10px;
-            border: 1px solid #333;
-        }
-
-        /* --- TABELLE (FIX Z-INDEX) --- */
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: center; vertical-align: middle; position: relative; }
-        thead th { position: sticky; top: 0; background: #333; z-index: 10; }
-
-        /* TRUCCO PER RIGHE: Elevazione dinamica */
-        tr.row-open { 
-            z-index: 9999 !important; 
-            position: relative; 
-            background: #2a2a2a !important;
-        }
-
-        /* --- COLOR SELECTOR --- */
-        .color-select-display {
-            width: 100%;
-            height: 70px;
-            background: #1b1b1b;
-            border: 1px solid #444;
-            border-radius: 6px;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        .color-select-display img { width: 100%; height: 100%; object-fit: contain; }
-
-        .color-select-options {
-            position: absolute;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 180px;
-            max-height: 220px;
-            overflow-y: auto;
-            background: #333;
-            border: 2px solid #5cb85c;
-            border-radius: 8px;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            padding: 8px;
-            z-index: 10000 !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-        .color-select-options img { width: 100%; height: auto; border-radius: 4px; cursor: pointer; border: 1px solid #444; }
-
-        /* --- BOTTONI --- */
-        .btn-add { background: #5cb85c; color: white; border: none; width: 100%; height: 60px; font-size: 30px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .section-bottoni button { width: 45%; height: 60px; font-size: 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-conferma { background: #5cb85c; color: white; }
-        .btn-annulla { background: #d9534f; color: white; }
-
-        @media (max-width: 768px) {
-            .filters { grid-template-columns: 1fr 1fr; }
-            .section-bottoni button { height: 50px; font-size: 16px; }
-        }
-    </style>
 </head>
-
 <body>
-    <div class="topbar">
-        <button class="topbar-button" onclick="aggiungidettaglioordine2()">&#8594;</button>
-    </div>
-
-    <div class="titolo-pagina">Aggiungi Dettaglio Ordine</div>
-
+<header class="app-header">
+    <button class="icon-btn" onclick="annulla()" aria-label="Indietro"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1>Aggiungi prodotti</h1>
+    <button class="header-link" onclick="aggiungidettaglioordine2()">Inserisci a mano</button>
+</header>
+<main class="page">
     <div class="filters">
         <select id="filtro_prodotto" onchange="filterProdotti()"><option value="">Prodotto</option></select>
         <select id="filtro_tipologia" onchange="filterProdotti()"><option value="">Tipologia</option></select>
         <select id="filtro_tema" onchange="filterProdotti()"><option value="">Tema</option></select>
-        <input type="text" id="filtro_descrizione" placeholder="Descrizione..." oninput="filterProdotti()">
+        <input type="text" id="filtro_descrizione" placeholder="Cerca..." oninput="filterProdotti()">
     </div>
+    <p class="hint">Scegli il colore toccando la foto, poi premi + per aggiungerlo all'ordine.</p>
+    <div class="table-wrap picker" id="tabellaProdottiContainer"><p>Caricamento…</p></div>
 
-    <div class="section-prodotti">
-        <div class="scroll-box" id="tabellaProdottiContainer"></div>
+    <div class="cart-head"><p class="section-label">Da aggiungere all'ordine</p></div>
+    <div class="cart" id="carrelloContainer">
+        <p>Carrello vuoto</p>
     </div>
-
-    <div class="titolo-pagina" style="font-size: 18px;">Carrello</div>
-    <div class="section-carrello">
-        <div class="scroll-box" id="carrelloContainer">
-            <p style="text-align:center">Carrello vuoto</p>
-        </div>
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-secondary" onclick="annulla()">Annulla</button>
+        <button class="btn btn-primary" onclick="confermaDettaglioOrdine()">Conferma</button>
     </div>
-
-    <div class="section-bottoni">
-        <button class="btn-conferma" onclick="confermaDettaglioOrdine()">CONFERMA</button>
-        <button class="btn-annulla" onclick="annulla()">ANNULLA</button>
-    </div>
-
+</footer>
     <script>
         const client = supabase.createClient("https://ixarnqyrsonhshkctcki.supabase.co", "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ");
         const urlParams = new URLSearchParams(window.location.search);
@@ -284,9 +161,9 @@
             carrello.forEach((c, i) => {
                 h += `<tr>
                     <td><img src="${c.img}" style="width:50px; height:40px; object-fit:contain;"></td>
-                    <td><input type="number" value="${c.prezzo}" step="0.01" onchange="carrello[${i}].prezzo=parseFloat(this.value)" style="width:60px; background:#111; color:white; border:1px solid #444;"></td>
-                    <td><input type="number" value="${c.qta}" onchange="carrello[${i}].qta=parseInt(this.value)" style="width:40px; background:#111; color:white; border:1px solid #444;"></td>
-                    <td><button class="btn-annulla" style="width:30px; height:30px; padding:0;" onclick="carrello.splice(${i},1);aggiornaCarrello()">X</button></td>
+                    <td><input type="number" value="${c.prezzo}" step="0.01" onchange="carrello[${i}].prezzo=parseFloat(this.value)"></td>
+                    <td><input type="number" value="${c.qta}" onchange="carrello[${i}].qta=parseInt(this.value)"></td>
+                    <td><button class="btn-annulla" onclick="carrello.splice(${i},1);aggiornaCarrello()">X</button></td>
                 </tr>`;
             });
             cont.innerHTML = h + `</tbody></table>`;

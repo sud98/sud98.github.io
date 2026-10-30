@@ -2,261 +2,58 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ordini</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Ordini · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f5f5f5;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        select, input[type="text"], input[type="date"] {
-            padding: 8px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background: #222;
-            color: #f5f5f5;
-        }
-
-        .table-container {
-            max-height: 60vh;
-            overflow-y: auto;
-            border: 1px solid #333;
-            border-radius: 8px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #222;
-        }
-
-        /* Larghezze colonne tabella */
-        #table_ordini th:nth-child(1),
-        #table_ordini td:nth-child(1) {
-            width: 40%; /* Destinatario */
-        }
-
-        #table_ordini th:nth-child(2),
-        #table_ordini td:nth-child(2) {
-            width: 25%; /* Data (più stretta) */
-        }
-
-        #table_ordini th:nth-child(3),
-        #table_ordini td:nth-child(3) {
-            width: 35%; /* Stato (più larga) */
-            white-space: nowrap; /* evita l'andata a capo */
-        }
-
-        th, td {
-            padding: 10px;
-            border-bottom: 1px solid #333;
-        }
-
-        #table_ordini th,
-        #table_ordini td {
-            text-align: center;
-        }
-
-
-        th {
-            background: #333;
-            position: sticky;
-            top: 0;
-        }
-
-        tr:hover {
-            background: #2a2a2a;
-            cursor: pointer;
-        }
-
-        .flag-true {
-            color: #5cb85c;
-        }
-
-        .flag-false {
-            color: #d9534f;
-        }
-
-        .buttons {
-            margin-top: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        button {
-            padding: 10px 20px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .btn-add { background: #5cb85c; color: white; }
-        .btn-del { background: #d9534f; color: white; }
-
-        /* --- VERSIONE MOBILE COMPATTA --- */
-        @media (max-width: 768px) {
-
-            table {
-                width: 100%;
-                table-layout: fixed; /* forza le colonne a stare dentro lo schermo */
-            }
-
-            /* Larghezze colonne tabella */
-            #table_ordini th:nth-child(1),
-            #table_ordini td:nth-child(1) {
-                width: 35%; /* Destinatario */
-            }
-
-            #table_ordini th:nth-child(2),
-            #table_ordini td:nth-child(2) {
-                width: 30%; /* Data (più stretta) */
-            }
-
-            #table_ordini th:nth-child(3),
-            #table_ordini td:nth-child(3) {
-                width: 25%; /* Stato (più larga) */
-                white-space: nowrap; /* evita l'andata a capo */
-            }
-
-            #table_ordini th:nth-child(4),
-            #table_ordini td:nth-child(4) {
-                width: 10%; /* Stato (più larga) */
-                white-space: nowrap; /* evita l'andata a capo */
-            }
-
-
-            th, td {
-                font-size: 14px;      /* testo più piccolo */
-                padding: 6px 4px;     /* meno spazio */
-                word-wrap: break-word; /* permette di andare a capo */
-                white-space: normal;   /* evita testo su una sola riga */
-            }
-
-            .filters {
-                grid-template-columns: 1fr; /* filtri impilati */
-                gap: 8px;
-            }
-
-            select, input[type="text"], input[type="date"] {
-                font-size: 14px;
-                padding: 10px;
-            }
-
-            .buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            button {
-                width: 100%;
-                font-size: 16px;
-                padding: 12px;
-            }
-        }
-
-        /* Pulsante freccia indietro */
-        .back-button {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            font-size: 28px;
-            font-weight: bold;
-            background: #1b1b1b;
-            color: #5bc0de;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 6px 12px;
-            cursor: pointer;
-            z-index: 999;
-            transition: 0.2s;
-        }
-
-        .back-button:hover {
-            background: #2a2a2a;
-            color: #ffffff;
-        }
-        .stato-lavorazione {
-        background-color: #ff6b6b; /* rosso */
-        color: white;
-        font-weight: bold;
-        padding: 4px 8px;
-        border-radius: 4px;
-        }
-
-        .stato-preparato {
-            background-color: #ffd93d; /* giallo */
-            color: black;
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .stato-consegnato {
-            background-color: #51cf66; /* verde */
-            color: white;
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-    </style>
 </head>
-
-<body>
-<div class="back-button" onclick="window.location.href = 'index.html'">←</div>
-
-<h1>Ordini</h1>
-
-<div class="filters">
-    <input type="text" id="filtro_destinatario" placeholder="Filtra per destinatario..." oninput="filterOrdini()">
-    <select id="filtro_stato" onchange="filterOrdini()">
-        <option value="">Tutti gli stati</option>
-        <option value="In preparazione">In preparazione</option>
-        <option value="Consegnato">Consegnato</option>
-        <option value="In attesa">In attesa</option>
-    </select>
-    <input type="date" id="filtro_data" onchange="filterOrdini()">
-</div>
-
-<div class="table-container">
-    <table id="table_ordini">
-        <thead>
-            <tr>
-                <th>Destinatario</th>
-                <th>Scadenza Consegna</th>
-                <th>Stato</th>
-                <th>Pagato</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
-
-<div class="buttons">
-    <button class="btn-add" onclick="vaiAggiungiOrdine()">Aggiungi Ordine</button>
-    <button class="btn-del" onclick="eliminaOrdine()">Elimina Ordine</button>
-</div>
-
+<body class="app-list">
+<header class="app-header">
+    <a class="icon-btn" href="index.html" aria-label="Torna alla home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Ordini</h1>
+</header>
+<main class="page">
+    <div class="filters cols-3">
+        <input class="full" type="text" id="filtro_destinatario" placeholder="Cerca destinatario..." oninput="filterOrdini()">
+        <select id="filtro_stato" onchange="filterOrdini()">
+            <option value="">Tutti gli stati</option>
+            <option value="IN LAVORAZIONE">In lavorazione</option>
+            <option value="PREPARATO">Preparato</option>
+            <option value="CONSEGNATO">Consegnato</option>
+        </select>
+        <input type="date" id="filtro_data" onchange="filterOrdini()" aria-label="Data di scadenza">
+    </div>
+    <p class="hint">Tocca un ordine per selezionarlo, poi premi «Apri». Tocca ✔ / ✘ per cambiare il pagamento.</p>
+    <div class="table-wrap">
+        <table id="table_ordini">
+            <thead>
+                <tr>
+                    <th>Destinatario</th>
+                    <th>Scadenza</th>
+                    <th>Stato</th>
+                    <th>Pagato</th>
+                </tr>
+            </thead>
+            <tbody><tr><td colspan="4" class="loading">Caricamento…</td></tr></tbody>
+        </table>
+    </div>
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-danger" onclick="eliminaOrdine()">Elimina</button>
+        <button class="btn btn-secondary" onclick="apriOrdineSelezionato()">Apri</button>
+        <button class="btn btn-primary" onclick="vaiAggiungiOrdine()">+ Nuovo</button>
+    </div>
+</footer>
 <script>
     const { createClient } = supabase;
 
@@ -404,9 +201,9 @@
 
     function evidenziaRiga(trSel) {
         document.querySelectorAll("#table_ordini tbody tr").forEach(tr => {
-            tr.style.backgroundColor = "";
+            tr.classList.remove("selezionata");
         });
-        trSel.style.backgroundColor = "#444";
+        trSel.classList.add("selezionata");
     }
 
     function vaiAggiungiOrdine() {
@@ -435,6 +232,13 @@
         loadOrdini();
     }
 
+    function apriOrdineSelezionato() {
+        if (!ordineSelezionato) {
+            alert("Seleziona un ordine");
+            return;
+        }
+        apriDettaglioOrdine(ordineSelezionato.id);
+    }
     function apriDettaglioOrdine(ordineID) {
         window.location.href = "page_ordine_dettaglio.html?id=" + ordineID;
     }

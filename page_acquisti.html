@@ -1,230 +1,36 @@
 <!DOCTYPE html>
-<html>
-<head>          
-    <meta charset="utf-8" />
-    <title>Monitor Acquisti</title>
-
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Acquisti · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <style>
-        /* --- STILE GENERALE --- */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background: #111;
-            color: #f5f5f5;
-        }
-
-        /* --- TITOLI SEZIONI --- */
-        .section-title {
-            flex: 0 0 8%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        /* --- SEZIONE TABELLA --- */
-        .section-table {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* --- SEZIONE BOTTONI --- */
-        .section-buttons {
-            flex: 0 0 8%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        /* --- CONTENITORE SCROLLABILE --- */
-        .scroll-box {
-            flex: 1;
-            width: 95%;
-            margin: auto;
-            overflow-y: auto;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 10px;
-            background: #1b1b1b;
-        }
-
-        /* --- BOTTONI --- */
-        .btn {
-            height: 45px;
-            width: 35%;
-            font-size: 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-add { background-color: #28a745; }
-        .btn-del { background-color: #dc3545; }
-
-        /* --- TABELLA --- */
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 16px;
-            table-layout: fixed;
-            background: #222;
-        }
-
-        th, td {
-            border: 1px solid #333;
-            padding: 6px 8px;
-            word-wrap: break-word;
-            white-space: normal;
-        }
-
-        th {
-            background-color: #333;
-            font-weight: bold;
-        }
-
-        /* Riga selezionata */
-        tr.selezionata {
-            background-color: #444;
-        }
-
-        /* Allineamenti */
-        td:nth-child(3), th:nth-child(3),
-        td:nth-child(4), th:nth-child(4) {
-            text-align: center;
-        }
-
-        /* Link */
-        a {
-            color: #5bc0de;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        /* Colonna 2: descrizione */
-        td:nth-child(2), th:nth-child(2) {
-            width: 35%;
-        }
-
-        /* Colonna 3: prezzo */
-        td:nth-child(3), th:nth-child(3) {
-            width: 10%;
-        }
-
-        /* Colonna 4: data */
-        td:nth-child(4), th:nth-child(4) {
-            width: 10%;
-        }
-
-        /* Colonna 5: negozio */
-        td:nth-child(5), th:nth-child(5) {
-            width: 10%;
-        }
-
-        /* Colonna 6: link */
-        td:nth-child(6) a {
-            display: inline-block;
-            max-width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
-
-        /* Nascondo colonna ID */
-        td:nth-child(1), th:nth-child(1) {
-            display: none;
-        }
-
-        /* --- RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-
-            .section-title {
-                font-size: 18px;
-            }
-
-            table {
-                font-size: 14px;
-            }
-
-            th, td {
-                padding: 4px;
-                font-size: 14px;
-            }
-
-            .btn {
-                width: 80%;
-                height: 45px;
-                font-size: 16px;
-            }
-
-            .section-buttons {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .scroll-box {
-                padding: 6px;
-            }
-        }
-
-        /* Pulsante freccia indietro */
-        /* Pulsante freccia indietro */
-        .back-button {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            font-size: 28px;
-            font-weight: bold;
-            background: #1b1b1b;
-            color: #5bc0de;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 6px 12px;
-            cursor: pointer;
-            z-index: 999;
-            transition: 0.2s;
-        }
-
-        .back-button:hover {
-            background: #2a2a2a;
-            color: #ffffff;
-        }
-        
-    </style>
 </head>
-
-<body>
-
-    <div class="section-title">
-        <div class="back-button" onclick="window.location.href = 'index.html'">←</div>
-        <h1>Tabella Acquisti</h1>
+<body class="app-list">
+<header class="app-header">
+    <a class="icon-btn" href="index.html" aria-label="Torna alla home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Acquisti</h1>
+</header>
+<main class="page">
+    <p class="hint">Tocca un acquisto per selezionarlo.</p>
+    <div class="table-wrap wide" id="tabella"><p>Caricamento…</p></div>
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-danger" onclick="eliminaRiga()">Elimina</button>
+        <button class="btn btn-primary" onclick="vaiAggiungi()">+ Nuovo acquisto</button>
     </div>
-
-    <div class="section-table">
-        <div class="scroll-box">
-            <div id="tabella"></div>
-        </div>
-    </div>
-
-    <div class="section-buttons">
-        <button class="btn btn-add" onclick="vaiAggiungi()">AGGIUNGI</button>
-        <button class="btn btn-del" onclick="eliminaRiga()">ELIMINA</button>
-    </div>
-
+</footer>
     <script>
         const client = supabase.createClient(
             "https://ixarnqyrsonhshkctcki.supabase.co",
@@ -286,6 +92,7 @@
                 alert("Seleziona una riga prima di eliminare.");
                 return;
             }
+            if (!confirm("Vuoi eliminare la riga selezionata?")) return;
             
             const { error } = await client
                 .from("acquisti")

@@ -2,146 +2,56 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Aggiungi Prodotto</title>
-
-    <style>
-        /* --- STILE GENERALE --- */
-        body {
-            margin: 0;
-            background: #111;
-            font-family: Arial, sans-serif;
-            color: white;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        /* --- CONTENITORE PRINCIPALE --- */
-        .container {
-            max-width: 700px;
-            margin: auto;
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            grid-auto-rows: minmax(60px, auto);
-            gap: 15px;
-            padding: 20px;
-            background: #1b1b1b;
-            border-radius: 12px;
-            border: 1px solid #333;
-            box-shadow: 0 0 12px rgba(0,0,0,0.4);
-        }
-
-        /* --- LABEL --- */
-        label {
-            font-size: 18px;
-            font-weight: bold;
-            align-self: center;
-        }
-
-        /* --- INPUT, SELECT, TEXTAREA --- */
-        select, input, textarea {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            background: #222;
-            color: #fff;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            min-height: 90px;
-            resize: vertical;
-        }
-
-        /* --- SEZIONE BOTTONI --- */
-        .buttons {
-            grid-column: 1 / 3;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        button {
-            padding: 10px 18px;
-            font-size: 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-exit {
-            background: #aa0000;
-            color: white;
-        }
-
-        .btn-add {
-            background: #008800;
-            color: white;
-        }
-
-        /* --- RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-
-            .container {
-                grid-template-columns: 1fr;
-                padding: 15px;
-                gap: 12px;
-            }
-
-            label {
-                font-size: 16px;
-            }
-
-            select, input, textarea {
-                font-size: 15px;
-                padding: 9px;
-            }
-
-            .buttons {
-                grid-column: 1;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            button {
-                width: 100%;
-                padding: 14px;
-                font-size: 17px;
-            }
-        }
-    </style>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Nuovo prodotto · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-<div class="container">
-
-    <label for="prodotto">Prodotto:</label>
-    <select id="prodotto"></select>
-
-    <label for="tipologia">Tipologia:</label>
-    <select id="tipologia"></select>
-
-    <label for="tema">Tema:</label>
-    <select id="tema"></select>
-
-    <label for="prezzo">Prezzo:</label>
-    <input id="prezzo" type="number">
-
-    <label for="descrizione">Descrizione:</label>
-    <textarea id="descrizione"></textarea>
-
-    <div class="buttons">
-        <button class="btn-add" id="btnAggiungi">Aggiungi</button>
-        <button class="btn-exit" id="btnEsci" onclick="window.location.href='page_prodotti.html'">❌ Esci</button>
+<header class="app-header">
+    <a class="icon-btn" href="page_prodotti.html" aria-label="Indietro"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Nuovo prodotto</h1>
+</header>
+<main class="page page-narrow">
+    <div class="card card-pad form">
+        <div class="field">
+            <label for="prodotto">Prodotto</label>
+            <select id="prodotto"></select>
+        </div>
+        <div class="field">
+            <label for="tipologia">Tipologia</label>
+            <select id="tipologia"></select>
+        </div>
+        <div class="field">
+            <label for="tema">Tema</label>
+            <select id="tema"></select>
+        </div>
+        <div class="field">
+            <label for="prezzo">Prezzo (€)</label>
+            <input id="prezzo" type="number" step="0.01" inputmode="decimal">
+        </div>
+        <div class="field">
+            <label for="descrizione">Descrizione</label>
+            <textarea id="descrizione"></textarea>
+        </div>
+        <p class="hint">Il codice del prodotto viene creato in automatico dalle sigle.</p>
     </div>
-
-</div>
-
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-secondary" id="btnEsci" onclick="window.location.href='page_prodotti.html'">Annulla</button>
+        <button class="btn btn-primary" id="btnAggiungi">Aggiungi</button>
+    </div>
+</footer>
 <script>
     // ===============================
     // SUPABASE CLIENT
@@ -307,7 +217,7 @@
     // EVENTI
     // ===============================
     document.addEventListener("DOMContentLoaded", () => {
-        loadProdotti();
+        loadProdotti().then(() => loadTipologie(document.getElementById("prodotto").value));
         loadTemi();
 
         document.getElementById("prodotto").addEventListener("change", (e) => {

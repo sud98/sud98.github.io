@@ -2,262 +2,64 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dettaglio Ordine</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dettaglio ordine · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f5f5f5;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        #ordine_info {
-            background:#222;
-            padding:15px;
-            border-radius:8px;
-            margin-bottom:20px;
-            border:1px solid #333;
-            font-size: 18px;
-        }
-
-        #ordine_info p {
-            margin: 5px 0;
-        }
-
-        .table-container {
-            height: 55vh;          /* altezza fissa */
-            overflow-y: auto;      /* scroll solo dentro la tabella */
-            border: 1px solid #333;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #222;
-        }
-
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #333;
-            font-size: 18px;
-            text-align: center;
-        }
-
-        th {
-            background: #333;
-            position: sticky;
-            top: 0;
-        }
-
-        tr:hover {
-            background: #2a2a2a;
-            cursor: pointer;
-        }
-
-        td.img-cell img {
-            max-width: 150px;
-            max-height: 150px;
-            object-fit: contain;
-            display: block;
-            margin: auto;
-        }
-
-        .flag-btn {
-            font-size: 32px;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .flag-true {
-            color: #5cb85c;
-        }
-
-        .flag-false {
-            color: #d9534f;
-        }
-
-        td[contenteditable="true"] {
-            background: #1b1b1b;
-            border-radius: 4px;
-        }
-
-        .buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        button {
-            padding: 12px 24px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .btn-back { background: #5bc0de; color: white; }
-        .btn-add  { background: #5cb85c; color: white; }
-        .btn-del  { background: #d9534f; color: white; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
-
-        .modal-content {
-            background: #1b1b1b;
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-            border: 1px solid #444;
-        }
-
-        .modal-content h3 {
-            margin-top: 0;
-        }
-
-        #notaEditor {
-            width: 100%;
-            height: 150px;
-            background: #222;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 16px;
-        }
-
-        .modal-buttons {
-            margin-top: 15px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-
-        /* --- VERSIONE MOBILE COMPATTA --- */
-        @media (max-width: 768px) {
-
-            body {
-                padding: 10px;
-            }
-
-            h1 {
-                font-size: 22px;
-                margin-bottom: 15px;
-            }
-
-            #ordine_info {
-                font-size: 16px;
-                padding: 12px;
-            }
-
-            table {
-                width: 100%;
-                table-layout: fixed; /* forza le colonne a stare dentro lo schermo */
-            }
-
-            th, td {
-                font-size: 14px;      /* testo più piccolo */
-                padding: 6px 4px;     /* meno spazio */
-                word-wrap: break-word; /* permette di andare a capo */
-                white-space: normal;   /* evita testo su una sola riga */
-            }
-
-            /* Riduce dimensione immagine */
-            td.img-cell img {
-                max-width: 90px;
-                max-height: 90px;
-            }
-
-            /* Icone ✔ ✘ più piccole */
-            .flag-btn {
-                font-size: 24px;
-            }
-
-            /* Pulsanti più comodi */
-            .buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            button {
-                width: 100%;
-                padding: 14px;
-                font-size: 16px;
-            }
-        }
-
-    </style>
 </head>
-
-<body>
-
-<h1>Dettaglio Ordine</h1>
-
-<div id="ordine_info">
-    <p><strong>Destinatario:</strong> <span id="info_destinatario"></span></p>
-    <p><strong>Scadenza consegna:</strong> <span id="info_scadenza"></span></p>
-    <p><strong>Stato:</strong> <span id="info_stato"></span></p>
-</div>
-
-<div class="table-container">
-    <table id="table_dettaglio">
-        <thead>
-            <tr>              
-                <th>Prodotto</th>
-                <th>Prezzo</th>
-                <th>Immagine</th>
-                <th>Preparato</th>
-                <th>Consegnato</th>
-                <th>Pagato</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
-
-<div class="buttons">
-    <button class="btn-add" onclick="aggiungiRiga()">Aggiungi Prodotto</button>
-    <button class="btn-del" onclick="eliminaRiga()">Elimina Riga</button>
-    <button class="btn-back" onclick="indietro()">Indietro</button>
-</div>
-
+<body class="app-list">
+<header class="app-header">
+    <button class="icon-btn" onclick="indietro()" aria-label="Torna agli ordini"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1>Dettaglio ordine</h1>
+</header>
+<main class="page">
+    <div id="ordine_info" class="card info-grid">
+        <div><span>Destinatario</span><span id="info_destinatario"></span></div>
+        <div><span>Scadenza</span><span id="info_scadenza"></span></div>
+        <div><span>Stato</span><span id="info_stato"></span></div>
+    </div>
+    <p class="hint">Tocca ✔ / ✘ per aggiornare. Tocca il prezzo per modificarlo, tocca due volte il prodotto per la nota.</p>
+    <div class="table-wrap wide">
+        <table id="table_dettaglio">
+            <thead>
+                <tr>
+                    <th>Prodotto</th>
+                    <th>Prezzo</th>
+                    <th>Immagine</th>
+                    <th>Preparato</th>
+                    <th>Consegnato</th>
+                    <th>Pagato</th>
+                </tr>
+            </thead>
+            <tbody><tr><td colspan="6" class="loading">Caricamento…</td></tr></tbody>
+        </table>
+    </div>
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-danger" onclick="eliminaRiga()">Elimina riga</button>
+        <button class="btn btn-primary" onclick="aggiungiRiga()">+ Aggiungi prodotto</button>
+    </div>
+</footer>
 <div id="notaModal" class="modal">
     <div class="modal-content">
-        <h3>Modifica Nota</h3>
-        <textarea id="notaEditor"></textarea>
-
+        <h3>Nota</h3>
+        <textarea id="notaEditor" rows="6"></textarea>
         <div class="modal-buttons">
-            <button onclick="salvaNota()">Salva</button>
-            <button onclick="chiudiNota()">Chiudi</button>
+            <button class="btn btn-secondary" onclick="chiudiNota()">Chiudi</button>
+            <button class="btn btn-primary" onclick="salvaNota()">Salva</button>
         </div>
     </div>
 </div>
-
-
 <script>
     const { createClient } = supabase;
 
@@ -386,9 +188,9 @@
 
     function evidenziaRiga(trSel) {
         document.querySelectorAll("#table_dettaglio tbody tr").forEach(tr => {
-            tr.style.backgroundColor = "";
+            tr.classList.remove("selezionata");
         });
-        trSel.style.backgroundColor = "#444";
+        trSel.classList.add("selezionata");
     }
 
     async function updatePrezzo(id, value) {
@@ -475,7 +277,7 @@
         // 4️⃣ Aggiorno la tabella ordini
         await db
             .from("ordini")
-            .update({ pagato: TRUE })
+            .update({ pagato: tuttiPagati })
             .eq("id", ordineID);
 
         // 5️⃣ Ricarico la UI
@@ -549,6 +351,7 @@
             alert("Seleziona una riga");
             return;
         }
+        if (!confirm("Vuoi eliminare questa riga dall'ordine?")) return;
         await db.from("ordine_dettaglio").delete().eq("id", selezionata.id);
         selezionata = null;
         loadDettaglio();
