@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Statistiche · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="app-list">
+<header class="app-header">
+    <a class="icon-btn" href="index.html" aria-label="Torna alla home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Statistiche</h1>
+</header>
+<main class="page">
+    <div class="tabs two" role="tablist">
+        <button class="tab active" data-ordine="desc" onclick="cambiaOrdine(this)">Più venduti</button>
+        <button class="tab" data-ordine="asc" onclick="cambiaOrdine(this)">Meno venduti</button>
+    </div>
+    <div class="table-wrap" id="classifica"><p>Caricamento…</p></div>
+</main>
+<script>
+    const client = supabase.createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    let classifica = [];
+    let ordine = "desc";
+
+    // Sola lettura: legge tutte le vendite a blocchi da 1000 (limite di Supabase)
+    async function leggiVendite() {
+        const tutte = [];
+        for (let da = 0; ; da += 1000) {
+            const { data, error } = await client
+                .from("vendite")
+                .select("colorazioneid")
+                .range(da, da + 999);
+            if (error) throw error;
+            tutte.push(...data);
+            if (data.length < 1000) return tutte;
+        }
+    }
+
+    async function caricaStatistiche() {
+        try {
+            const vendite = await leggiVendite();
+            const { data: colorazioni, error } = await client
+                .from("colorazioni")
+                .select("id, percorsoimmagine");
+            if (error) throw error;
+
+            const foto = {};
+            for (const c of colorazioni) {
+                if (!foto[c.id] && c.percorsoimmagine) foto[c.id] = c.percorsoimmagine;
+            }
+
+            const conteggi = {};
+            for (const v of vendite) {
+                const id = v.colorazioneid ?? "";
+                conteggi[id] = (conteggi[id] || 0) + 1;
+            }
+
+            classifica = Object.entries(conteggi).map(([id, n]) => ({ id, n, foto: foto[id] }));
+            mostra();
+        } catch (e) {
+            console.error(e);
+            document.getElementById("classifica").innerHTML = "<p>Errore nel caricamento</p>";
+        }
+    }
+
+    function mostra() {
+        const box = document.getElementById("classifica");
+        if (!classifica.length) {
+            box.innerHTML = "<p>Nessuna vendita trovata.</p>";
+            return;
+        }
+
+        const righe = [...classifica].sort((a, b) =>
+            ordine === "desc" ? b.n - a.n : a.n - b.n
+        );
+
+        // Senza foto (vendite manuali) mostro la descrizione al posto dell'immagine
+        let html = `<table class="stats-list"><tbody>`;
+        righe.forEach((r, i) => {
+            const img = r.foto
+                ? `<img src="${r.foto}" alt="" loading="lazy">`
+                : `<div class="no-img">${r.id}</div>`;
+            html += `<tr>
+                <td class="pos">${i + 1}</td>
+                <td class="foto">${img}</td>
+                <td class="qta"><strong>${r.n}</strong> ${r.n === 1 ? "venduto" : "venduti"}</td>
+            </tr>`;
+        });
+        html += "</tbody></table>";
+        box.innerHTML = html;
+        box.scrollTop = 0;
+    }
+
+    function cambiaOrdine(btn) {
+        document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === btn));
+        ordine = btn.dataset.ordine;
+        mostra();
+    }
+
+    window.onload = caricaStatistiche;
+</script>
+</body>
+</html>

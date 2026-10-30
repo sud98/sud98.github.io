@@ -685,3 +685,31 @@ tr.row-open td { background: var(--accent-soft); }
 
 .tab-panel .btn-row { display: flex; gap: 10px; }
 .tab-panel .btn-row .btn { flex: 1; }
+
+/* ---------- Vendite: una riga compatta per vendita ---------- */
+table.sales th.num, table.sales td.num { text-align: right; }
+table.sales td { padding: 10px 8px; }
+table.sales td.foto { width: 68px; padding-right: 0; }
+table.sales td.foto img { width: 60px; height: 60px; }
+table.sales td.foto .no-img { width: 60px; height: 60px; border-radius: 8px; background: var(--surface-2); }
+table.sales td.info { overflow-wrap: anywhere; }
+table.sales .titolo { font-size: 14px; font-weight: 700; line-height: 1.3; color: var(--info); }
+table.sales .sub { font-size: 13px; color: var(--muted); }
+table.sales .sub.dest { font-size: 17px; font-weight: 700; color: var(--text); }
+table.sales td.prezzo { font-weight: 800; white-space: nowrap; }
+
+/* ---------- Statistiche: classifica dei più venduti ---------- */
+.tabs.two { grid-template-columns: repeat(2, 1fr); }
+table.stats-list td { padding: 10px 8px; vertical-align: middle; }
+table.stats-list td.pos { width: 36px; text-align: center; font-weight: 800; color: var(--muted); }
+table.stats-list td.foto { width: 96px; }
+table.stats-list td.foto img { width: 88px; height: 88px; }
+table.stats-list td.foto .no-img {
+    width: 88px; height: 88px; border-radius: 8px; background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center; padding: 6px;
+    font-size: 11px; line-height: 1.2; text-align: center; color: var(--muted);
+    overflow: hidden; overflow-wrap: anywhere;
+}
+table.stats-list td.qta { text-align: right; font-size: 15px; color: var(--muted); white-space: nowrap; }
+table.stats-list td.qta strong { font-size: 24px; font-weight: 800; color: var(--text); margin-right: 2px; }
+.tabs.two { grid-template-columns: repeat(2, 1fr); }
