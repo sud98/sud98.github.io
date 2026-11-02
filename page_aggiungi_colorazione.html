@@ -108,6 +108,9 @@ async function salvaColorazione() {
         return;
     }
 
+    // Se l'ID era già stato usato, sul telefono potrebbe esserci la foto vecchia
+    await aggiornaFotoSalvata(publicURL);
+
     alert("Colorazione aggiunta!");
     window.history.back();
 }

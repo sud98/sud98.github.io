@@ -22,7 +22,7 @@
     <h1>Colorazioni</h1>
 </header>
 <main class="page">
-    <p class="hint">Tocca la descrizione per modificarla. Tocca due volte l'immagine per sostituirla.</p>
+    <p class="hint">Tocca una colorazione per selezionarla, poi «Cambia foto» per sostituire l'immagine. Tocca la descrizione per modificarla.</p>
     <div class="table-wrap">
         <table id="table_colori">
             <thead>
@@ -39,6 +39,7 @@
 <footer class="action-bar">
     <div class="action-bar-inner">
         <button class="btn btn-danger" onclick="eliminaColorazione()">Elimina</button>
+        <button class="btn btn-secondary" onclick="cambiaFotoSelezionata()">Cambia foto</button>
         <button class="btn btn-primary" onclick="aggiungiColorazione()">+ Aggiungi colore</button>
     </div>
 </footer>
@@ -82,6 +83,11 @@
         const tbody = document.querySelector("#table_colori tbody");
         tbody.innerHTML = "";
 
+        if (!colorazioniCache.length) {
+            tbody.innerHTML = `<tr><td colspan="3" class="loading">Nessun colore ancora: premi «+ Aggiungi colore».</td></tr>`;
+            return;
+        }
+
         colorazioniCache.forEach(row => {
             const tr = document.createElement("tr");
 
@@ -91,7 +97,7 @@
             };
 
             //const imgUrl = BASE_IMG_URL + row.id + ".png";
-            const imgUrl = BASE_IMG_URL + row.id + ".png?cache=" + Date.now();
+            const imgUrl = BASE_IMG_URL + row.id + ".png";
 
             tr.innerHTML = `
                 <td>${row.id}</td>
@@ -130,6 +136,14 @@
         window.history.back();
     }
 
+    function cambiaFotoSelezionata() {
+        if (!selezionata) {
+            alert("Seleziona una colorazione");
+            return;
+        }
+        cambiaImmagine(selezionata.id);
+    }
+
     function aggiungiColorazione() {
         window.location.href = "page_aggiungi_colorazione.html?id=" + prodottoID;
     }
@@ -146,6 +160,7 @@
         const filePath = publicURL.split("/object/public/Immagini/")[1];
         
         await db.storage.from("Immagini").remove([filePath]);
+        dimenticaFotoSalvata(publicURL);
 
         const { error: dbError } = await db
             .from("colorazioni")
@@ -178,18 +193,8 @@
             // Percorso reale del file nel bucket
             const oldPath = `${id}.png`;
 
-            // Elimino vecchia immagine
-            const { error: removeError } = await db.storage
-                .from("Immagini")
-                .remove([oldPath]);
-
-            if (removeError) {
-                console.error(removeError);
-                alert("Errore eliminando immagine");
-                return;
-            }
-
-            // Carico nuova immagine (sovrascrive)
+            // Carico nuova immagine (upsert sovrascrive quella vecchia: se il caricamento
+            // non va a buon fine la foto vecchia resta al suo posto)
             const { error: uploadError } = await db.storage
                 .from("Immagini")
                 .upload(oldPath, file, { upsert: true });
@@ -215,6 +220,8 @@
 
             // Aggiorno cache e tabella
             colorazione.percorsoimmagine = newURL;
+            await aggiornaFotoSalvata(newURL);
+            alert("Foto sostituita.");
             loadColorazioni();
         };
 

@@ -22,10 +22,20 @@
     <h1>Dettaglio ordine</h1>
 </header>
 <main class="page">
-    <div id="ordine_info" class="card info-grid">
-        <div><span>Destinatario</span><span id="info_destinatario"></span></div>
-        <div><span>Scadenza</span><span id="info_scadenza"></span></div>
-        <div><span>Stato</span><span id="info_stato"></span></div>
+    <div id="ordine_info" class="card order-edit">
+        <div class="field full">
+            <label for="info_destinatario">Destinatario</label>
+            <input type="text" id="info_destinatario" onchange="salvaInfoOrdine('destinatario', this)">
+        </div>
+        <div class="field">
+            <label for="info_scadenza">Scadenza</label>
+            <input type="date" id="info_scadenza" onchange="salvaInfoOrdine('scadenza_consegna', this)">
+        </div>
+        <div class="field">
+            <label>Stato</label>
+            <span id="info_stato"></span>
+        </div>
+        <p class="salvato full" id="info_salvato" aria-live="polite"></p>
     </div>
     <p class="hint">Tocca ✔ / ✘ per aggiornare. Tocca il prezzo per modificarlo, tocca due volte il prodotto per la nota.</p>
     <div class="table-wrap wide">
@@ -91,9 +101,35 @@
 
         destinatarioOrdine = data.destinatario;
 
-        document.getElementById("info_destinatario").innerText = data.destinatario;
-        document.getElementById("info_scadenza").innerText = data.scadenza_consegna;
+        document.getElementById("info_destinatario").value = data.destinatario;
+        document.getElementById("info_scadenza").value = data.scadenza_consegna;
         document.getElementById("info_stato").innerText = data.stato;
+    }
+
+    // Modifica destinatario o scadenza: salva appena esci dal campo
+    async function salvaInfoOrdine(campo, input) {
+        const valore = input.value.trim();
+        const avviso = document.getElementById("info_salvato");
+        if (!valore) {
+            alert(campo === "destinatario" ? "Il destinatario non può essere vuoto." : "Inserisci una data di scadenza.");
+            loadOrdineInfo();
+            return;
+        }
+
+        const { error } = await db
+            .from("ordini")
+            .update({ [campo]: valore })
+            .eq("id", ordineID);
+
+        if (error) {
+            alert("Errore durante il salvataggio.");
+            loadOrdineInfo();
+            return;
+        }
+
+        if (campo === "destinatario") destinatarioOrdine = valore;
+        avviso.textContent = "Salvato ✓";
+        setTimeout(() => { avviso.textContent = ""; }, 2000);
     }
 
     async function loadDettaglio() {
