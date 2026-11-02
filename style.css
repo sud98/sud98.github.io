@@ -805,3 +805,19 @@ th.sortable .freccia { color: var(--accent); font-size: 11px; }
 }
 .bro-item.escluso { opacity: 0.4; }
 .bro-item.escluso .tick { background: var(--surface-2); color: transparent; border: 2px solid var(--border); }
+
+/* ---------- Magazzino ---------- */
+table.stock-list td.stock { width: 132px; white-space: nowrap; text-align: right; }
+table.stock-list td.stock button {
+    width: 36px; height: 40px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--surface-2); color: var(--text); font: inherit; font-size: 20px; font-weight: 700;
+    cursor: pointer; vertical-align: middle;
+}
+table.stock-list td.stock input {
+    width: 48px; height: 40px; margin: 0 3px; padding: 0; text-align: center;
+    font-size: 18px; font-weight: 800; vertical-align: middle; -moz-appearance: textfield;
+}
+table.stock-list td.stock input::-webkit-inner-spin-button,
+table.stock-list td.stock input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+table.stock-list tr.esaurito td.stock input { color: var(--danger); background: var(--danger-soft); }
+table.stock-list tr.esaurito td.foto img { opacity: 0.55; }

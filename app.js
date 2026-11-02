@@ -40,3 +40,16 @@ async function dimenticaFotoSalvata(url) {
         await cache.delete(url.split("?")[0]);
     } catch (e) {}
 }
+
+// Magazzino: ogni vendita toglie un pezzo, ogni vendita annullata lo rimette.
+// Come nella vecchia app conto solo i colori che hanno già una riga in magazzino.
+async function muoviMagazzino(db, colorazioneid, delta) {
+    if (!colorazioneid || !delta) return;
+    try {
+        const { data } = await db.from("magazzino").select("quantita").eq("id", colorazioneid).maybeSingle();
+        if (!data) return;
+        await db.from("magazzino").update({ quantita: (data.quantita || 0) + delta }).eq("id", colorazioneid);
+    } catch (e) {
+        console.warn("Magazzino non aggiornato:", e);
+    }
+}

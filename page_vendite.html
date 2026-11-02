@@ -108,6 +108,12 @@
             if (!confirm("Vuoi eliminare la riga selezionata?")) return;
             
             
+            const { data: vendita } = await client
+                .from("vendite")
+                .select("colorazioneid")
+                .eq("id", rigaSelezionata)
+                .maybeSingle();
+
             const { error } = await client
                 .from("vendite")
                 .delete()
@@ -117,6 +123,9 @@
                 alert("Errore durante l'eliminazione.");
                 return;
             }
+
+            // Vendita annullata: il pezzo torna in magazzino
+            if (vendita) await muoviMagazzino(client, vendita.colorazioneid, 1);
 
             alert("Riga eliminata.");
             rigaSelezionata = null;

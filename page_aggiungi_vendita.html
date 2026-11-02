@@ -176,7 +176,9 @@
             });
 
             const { error } = await client.from("vendite").insert(rows);
-            if (error) alert("Errore"); else window.location.href = "page_vendite.html";
+            if (error) return alert("Errore");
+            for (const r of rows) await muoviMagazzino(client, r.colorazioneid, -1);
+            window.location.href = "page_vendite.html";
         }
 
         // Chiudi se clicchi fuori

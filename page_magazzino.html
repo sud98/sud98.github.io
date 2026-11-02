@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Magazzino · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="app-list">
+<header class="app-header">
+    <a class="icon-btn" href="index.html" aria-label="Torna alla home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Magazzino</h1>
+</header>
+<main class="page">
+    <div class="tabs" role="tablist">
+        <button class="tab active" data-vista="tutti" onclick="cambiaVista(this)">Tutti</button>
+        <button class="tab" data-vista="disponibili" onclick="cambiaVista(this)">In casa</button>
+        <button class="tab" data-vista="esauriti" onclick="cambiaVista(this)">Esauriti</button>
+    </div>
+    <div class="filters">
+        <select id="f_prodotto" onchange="mostra()">
+            <option value="">Tutti i prodotti</option>
+        </select>
+        <input type="text" id="f_testo" placeholder="Cerca..." oninput="mostra()">
+    </div>
+    <p class="hint" id="riepilogo">Usa − e + oppure tocca il numero per scriverlo. Ogni vendita toglie un pezzo da sola.</p>
+    <div class="table-wrap" id="lista"><p>Caricamento…</p></div>
+</main>
+<script>
+    const client = supabase.createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    let righe = [];          // una riga per ogni colorazione
+    let vista = "tutti";
+
+    async function carica() {
+        const [{ data: col, error: e1 }, { data: prod, error: e2 }, { data: mag, error: e3 }] = await Promise.all([
+            client.from("colorazioni").select("id, prodottoid, descrizione, percorsoimmagine").order("id"),
+            client.from("prodotti").select("id, prodotto, descrizione"),
+            client.from("magazzino").select("id, quantita")
+        ]);
+        if (e1 || e2 || e3) {
+            console.error(e1 || e2 || e3);
+            document.getElementById("lista").innerHTML = "<p>Errore nel caricamento</p>";
+            return;
+        }
+
+        const prodotti = {};
+        for (const p of prod) prodotti[p.id] = p;
+        const quantita = {};
+        for (const m of mag) quantita[m.id] = m.quantita ?? 0;
+
+        righe = col.map(c => {
+            const p = prodotti[c.prodottoid] || {};
+            return {
+                id: c.id,
+                foto: c.percorsoimmagine,
+                tipo: p.prodotto || "",
+                desc: [p.descrizione, c.descrizione].filter(Boolean).join(" · ") || c.id,
+                qta: quantita[c.id] ?? 0
+            };
+        });
+
+        const sel = document.getElementById("f_prodotto");
+        [...new Set(righe.map(r => r.tipo).filter(Boolean))].sort((a, b) => a.localeCompare(b, "it")).forEach(t => {
+            const opt = document.createElement("option");
+            opt.value = t;
+            opt.textContent = t.charAt(0) + t.slice(1).toLowerCase();
+            sel.appendChild(opt);
+        });
+        mostra();
+    }
+
+    function mostra() {
+        const box = document.getElementById("lista");
+        const fTipo = document.getElementById("f_prodotto").value;
+        const fTesto = document.getElementById("f_testo").value.trim().toLowerCase();
+
+        const lista = righe
+            .filter(r => !fTipo || r.tipo === fTipo)
+            .filter(r => !fTesto || r.desc.toLowerCase().includes(fTesto) || r.id.toLowerCase().includes(fTesto))
+            .filter(r => vista === "tutti" || (vista === "disponibili" ? r.qta > 0 : r.qta <= 0));
+
+        const pezzi = lista.reduce((s, r) => s + Math.max(r.qta, 0), 0);
+        document.getElementById("riepilogo").textContent =
+            `${lista.length} ${lista.length === 1 ? "colore" : "colori"} · ${pezzi} ${pezzi === 1 ? "pezzo" : "pezzi"} in casa. Usa − e + oppure tocca il numero. Ogni vendita toglie un pezzo da sola.`;
+
+        if (!lista.length) {
+            box.innerHTML = "<p>Nessun prodotto.</p>";
+            return;
+        }
+
+        let html = `<table class="stats-list stock-list"><thead><tr><th>Foto</th><th>Descrizione</th><th class="num">In casa</th></tr></thead><tbody>`;
+        for (const r of lista) {
+            const img = r.foto
+                ? `<img src="${r.foto}" alt="" loading="lazy">`
+                : `<div class="no-img"></div>`;
+            html += `<tr class="${r.qta <= 0 ? "esaurito" : ""}" data-id="${r.id}">
+                <td class="foto">${img}</td>
+                <td class="desc">${r.desc}</td>
+                <td class="stock">
+                    <button type="button" aria-label="Togli uno" onclick="cambia('${r.id}', -1)">−</button>
+                    <input type="number" inputmode="numeric" step="1" value="${r.qta}" aria-label="Quantità"
+                           onfocus="this.select()" onchange="scrivi('${r.id}', this)">
+                    <button type="button" aria-label="Aggiungi uno" onclick="cambia('${r.id}', 1)">+</button>
+                </td>
+            </tr>`;
+        }
+        box.innerHTML = html + "</tbody></table>";
+    }
+
+    function cambia(id, delta) {
+        const r = righe.find(x => x.id === id);
+        if (r) salva(r, r.qta + delta);
+    }
+
+    function scrivi(id, input) {
+        const r = righe.find(x => x.id === id);
+        const n = parseInt(input.value, 10);
+        if (!r) return;
+        if (isNaN(n)) { input.value = r.qta; return; }
+        salva(r, n);
+    }
+
+    async function salva(r, n) {
+        const prima = r.qta;
+        r.qta = n;
+        aggiornaRiga(r);
+
+        // upsert: crea la riga se quel colore non era ancora in magazzino
+        const { error } = await client
+            .from("magazzino")
+            .upsert({ id: r.id, quantita: n, percorsoimmagine: r.foto });
+
+        if (error) {
+            console.error(error);
+            alert("Errore salvando la quantità.");
+            r.qta = prima;
+            aggiornaRiga(r);
+        }
+    }
+
+    // Aggiorno solo la riga toccata, così la lista non salta
+    function aggiornaRiga(r) {
+        const tr = document.querySelector(`tr[data-id="${r.id}"]`);
+        if (!tr) return;
+        tr.classList.toggle("esaurito", r.qta <= 0);
+        const input = tr.querySelector("input");
+        if (document.activeElement !== input) input.value = r.qta;
+    }
+
+    function cambiaVista(btn) {
+        document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === btn));
+        vista = btn.dataset.vista;
+        mostra();
+    }
+
+    window.onload = carica;
+</script>
+</body>
+</html>

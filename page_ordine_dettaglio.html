@@ -360,6 +360,7 @@
                 destinatario: destinatarioOrdine
             }
         ]);
+        await muoviMagazzino(db, colorazioneid, -1);
     }
 
     async function rimuoviVendita(colorazioneid, prezzo) {
@@ -375,6 +376,7 @@
 
         if (data && data.length > 0) {
             await db.from("vendite").delete().eq("id", data[0].id);
+            await muoviMagazzino(db, colorazioneid, 1);
         }
     }
 

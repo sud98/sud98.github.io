@@ -160,9 +160,11 @@
             .update({ pagato: newValue })
             .eq("ordineid", id);
 
-        // 4️⃣ Per ogni riga eseguo inserisciVendita o rimuoviVendita
+        // 4️⃣ Per ogni riga eseguo inserisciVendita o rimuoviVendita,
+        //    saltando quelle che erano già così (es. già pagate dal dettaglio)
         for (const dett of dettagli) {
-            
+            if (!!dett.pagato === newValue) continue;
+
             if (newValue === true) {
                 await inserisciVendita(dett.colorazioneid, dett.prezzo, destinatarioOrdine);
             } else {
@@ -185,6 +187,7 @@
                 destinatario: destinatarioOrdine
             }
         ]);
+        await muoviMagazzino(db, colorazioneid, -1);
     }
 
     async function rimuoviVendita(colorazioneid, prezzo, destinatarioOrdine) {
@@ -200,6 +203,7 @@
 
         if (data && data.length > 0) {
             await db.from("vendite").delete().eq("id", data[0].id);
+            await muoviMagazzino(db, colorazioneid, 1);
         }
     }
 
