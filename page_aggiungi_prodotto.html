@@ -255,8 +255,7 @@
                 alert("Errore durante l'inserimento");
                 console.error(error);
             } else {
-                alert("Prodotto aggiunto con sigla: " + sigla + "
-Ora aggiungi le sue colorazioni.");
+                alert("Prodotto aggiunto con sigla: " + sigla + ". Ora aggiungi le sue colorazioni.");
                 window.location.href = "page_colorazioni.html?id=" + encodeURIComponent(sigla);
             }
 
