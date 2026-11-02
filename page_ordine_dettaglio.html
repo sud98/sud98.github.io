@@ -325,7 +325,7 @@
         //Aggiorno stato ordine
         const { data: dettagli_ordine } = await db
                 .from("ordine_dettaglio")
-                .select("preparato,consegnato")
+                .select("preparato,consegnato,pagato")
                 .eq("ordineid", ordineID)
 
         // Verifica se TUTTI sono true 

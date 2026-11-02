@@ -98,6 +98,9 @@
     const nome = p => p.descrizione?.trim() ||
         [bello(p.prodotto) + (p.tipologia && p.tipologia !== p.prodotto && p.tipologia !== "ALTRO" ? " " + p.tipologia.toLowerCase() : ""),
          p.tema && p.tema !== "ALTRO" ? bello(p.tema) : ""].filter(Boolean).join(" · ");
+    // Ordine per tema: i prodotti senza tema ("ALTRO") vanno in fondo
+    const ordineTema = p => !p.tema || p.tema === "ALTRO" ? "￿" : p.tema;
+    const nomeTema = p => !p.tema || p.tema === "ALTRO" ? "Altro" : bello(p.tema);
     const euro = n => "€ " + Number(n).toFixed(2).replace(".", ",");
 
     async function carica() {
@@ -147,6 +150,7 @@
             .filter(p => !scelte.tema.size || scelte.tema.has(p.tema))
             .filter(p => !testo || (p.descrizione || "").toLowerCase().includes(testo))
             .sort((a, b) =>
+                ordineTema(a).localeCompare(ordineTema(b), "it") ||
                 a.prodotto.localeCompare(b.prodotto, "it") ||
                 a.tipologia.localeCompare(b.tipologia, "it") ||
                 nome(a).localeCompare(nome(b), "it"));
@@ -411,10 +415,10 @@
         let colonna = 0;
 
         for (const p of lista) {
-            const nuovoGruppo = p.prodotto + "|" + p.tipologia;
+            const nuovoGruppo = nomeTema(p);
             if (nuovoGruppo !== gruppo) {
                 gruppo = nuovoGruppo;
-                sezione = bello(p.prodotto) + (p.tipologia && p.tipologia !== p.prodotto && p.tipologia !== "ALTRO" ? " · " + bello(p.tipologia) : "");
+                sezione = nuovoGruppo;
                 if (colonna !== 0) { y += H + GAP_RIGA; colonna = 0; }
                 if (y > TOP) y += 3;     // un po' d'aria prima di una nuova sezione
                 if (y + TITOLO + H > BOTTOM) {
