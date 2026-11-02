@@ -39,13 +39,13 @@
         <table id="table_prodotti">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Descrizione</th>
+                    <th>Immagine</th>
+                    <th>Prezzo</th>
                     <th>Prodotto</th>
                     <th>Tipologia</th>
                     <th>Tema</th>
-                    <th>Descrizione</th>
-                    <th>Prezzo</th>
-                    <th>Immagine</th>
+                    <th>ID</th>
                 </tr>
             </thead>
             <tbody><tr><td colspan="7" class="loading">Caricamento…</td></tr></tbody>
@@ -166,19 +166,19 @@
             //const imgUrl = BASE_IMG_URL + row.id + "_01.png";
             const imgUrl = BASE_IMG_URL + row.id + "_01.png";
             tr.innerHTML = `
-                <td>${row.id}</td>
-                <td>${row.prodotto}</td>
-                <td>${row.tipologia}</td>
-                <td>${row.tema}</td>
                 <td contenteditable="true"
                     onblur="updateDescrizione('${row.id}', this.innerText)">
                     ${row.descrizione || ""}
                 </td>
+                <td><img src="${imgUrl}" alt=""></td>
                 <td contenteditable="true"
                     onblur="updatePrezzo('${row.id}', this.innerText)">
                     ${row.prezzo ?? ""}
                 </td>
-                <td><img src="${imgUrl}" alt=""></td>
+                <td>${row.prodotto}</td>
+                <td>${row.tipologia}</td>
+                <td>${row.tema}</td>
+                <td>${row.id}</td>
             `;
 
             tbody.appendChild(tr);

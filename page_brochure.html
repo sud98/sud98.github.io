@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Brochure · GE WoodArt</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WoodArt">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<header class="app-header">
+    <a class="icon-btn" href="index.html" aria-label="Torna alla home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1>Brochure</h1>
+</header>
+<main class="page page-narrow">
+    <p class="hint">Scegli cosa mettere nel catalogo. Se non tocchi niente ci finiscono tutti i prodotti.</p>
+
+    <section class="card card-pad form">
+        <div class="field">
+            <span class="section-label">Prodotto</span>
+            <div class="chips" id="f_prodotto"></div>
+        </div>
+        <div class="field" id="box_tipologia" hidden>
+            <span class="section-label">Tipologia</span>
+            <div class="chips" id="f_tipologia"></div>
+        </div>
+        <div class="field">
+            <span class="section-label">Tema</span>
+            <div class="chips" id="f_tema"></div>
+        </div>
+        <div class="field">
+            <label for="f_testo">Cerca nella descrizione</label>
+            <input type="search" id="f_testo" placeholder="es. zucchetta" oninput="aggiorna()">
+        </div>
+    </section>
+
+    <section class="card card-pad form">
+        <span class="section-label">Impaginazione</span>
+        <div class="field">
+            <label for="o_titolo">Titolo in copertina</label>
+            <input type="text" id="o_titolo" value="Catalogo" onchange="ricordaOpzioni()">
+        </div>
+        <div class="field">
+            <label for="o_contatti">Contatti (facoltativo)</label>
+            <input type="text" id="o_contatti" placeholder="es. Instagram @gewoodart · 333 1234567" onchange="ricordaOpzioni()">
+        </div>
+        <div class="field">
+            <label>Foto per riga</label>
+            <div class="tabs two" role="radiogroup">
+                <button type="button" class="tab active" data-cols="3" onclick="scegliColonne(this)">3 · più prodotti</button>
+                <button type="button" class="tab" data-cols="2" onclick="scegliColonne(this)">2 · foto grandi</button>
+            </div>
+        </div>
+        <label class="check"><input type="checkbox" id="o_prezzi" checked> Mostra i prezzi</label>
+        <label class="check"><input type="checkbox" id="o_colori" checked> Mostra i colori disponibili</label>
+    </section>
+
+    <div class="bro-head">
+        <span class="section-label" id="conteggio">Caricamento…</span>
+        <span class="bro-links">
+            <button type="button" class="link-btn" onclick="includiTutti(true)">Tutti</button>
+            <button type="button" class="link-btn" onclick="includiTutti(false)">Nessuno</button>
+        </span>
+    </div>
+    <p class="hint">Tocca un prodotto per toglierlo o rimetterlo nel PDF.</p>
+    <div class="bro-grid" id="anteprima"></div>
+</main>
+<footer class="action-bar">
+    <div class="action-bar-inner">
+        <button class="btn btn-primary" id="btnPdf" onclick="creaPDF()">Crea PDF</button>
+    </div>
+</footer>
+<script>
+    const client = supabase.createClient(
+        "https://ixarnqyrsonhshkctcki.supabase.co",
+        "sb_publishable_pGINBChZ1U3J4xUEvb0XtQ_pR7wc9eZ"
+    );
+
+    // Questa pagina legge soltanto: non scrive nulla nel database
+    let prodotti = [];
+    let coloriPer = {};               // prodottoid -> [colorazioni]
+    const esclusi = new Set();        // prodotti tolti a mano dall'anteprima
+    const scelte = { prodotto: new Set(), tipologia: new Set(), tema: new Set() };
+    let colonne = 3;
+
+    const bello = s => (s || "").charAt(0).toUpperCase() + (s || "").slice(1).toLowerCase();
+    // Se manca la descrizione non mostro il codice ma "Orecchini bottone · Geometrico"
+    const nome = p => p.descrizione?.trim() ||
+        [bello(p.prodotto) + (p.tipologia && p.tipologia !== p.prodotto && p.tipologia !== "ALTRO" ? " " + p.tipologia.toLowerCase() : ""),
+         p.tema && p.tema !== "ALTRO" ? bello(p.tema) : ""].filter(Boolean).join(" · ");
+    const euro = n => "€ " + Number(n).toFixed(2).replace(".", ",");
+
+    async function carica() {
+        const [{ data: p, error: e1 }, { data: c, error: e2 }] = await Promise.all([
+            client.from("prodotti").select("id, prodotto, tipologia, tema, descrizione, prezzo"),
+            client.from("colorazioni").select("id, prodottoid, descrizione, percorsoimmagine").order("id")
+        ]);
+        if (e1 || e2) {
+            console.error(e1 || e2);
+            document.getElementById("conteggio").textContent = "Errore nel caricamento";
+            return;
+        }
+        prodotti = p;
+        coloriPer = {};
+        for (const col of c) (coloriPer[col.prodottoid] ||= []).push(col);
+        aggiorna();
+    }
+
+    // ---------- Filtri ----------
+    function chips(id, valori, set) {
+        const box = document.getElementById(id);
+        box.innerHTML = "";
+        for (const [valore, n] of valori) {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "chip" + (set.has(valore) ? " on" : "");
+            b.innerHTML = `${bello(valore)} <small>${n}</small>`;
+            b.onclick = () => {
+                set.has(valore) ? set.delete(valore) : set.add(valore);
+                aggiorna();
+            };
+            box.appendChild(b);
+        }
+    }
+
+    function conta(lista, campo) {
+        const m = new Map();
+        for (const p of lista) m.set(p[campo], (m.get(p[campo]) || 0) + 1);
+        return [...m].sort((a, b) => String(a[0]).localeCompare(String(b[0]), "it"));
+    }
+
+    function filtrati() {
+        const testo = document.getElementById("f_testo").value.trim().toLowerCase();
+        return prodotti
+            .filter(p => !scelte.prodotto.size || scelte.prodotto.has(p.prodotto))
+            .filter(p => !scelte.tipologia.size || scelte.tipologia.has(p.tipologia))
+            .filter(p => !scelte.tema.size || scelte.tema.has(p.tema))
+            .filter(p => !testo || (p.descrizione || "").toLowerCase().includes(testo))
+            .sort((a, b) =>
+                a.prodotto.localeCompare(b.prodotto, "it") ||
+                a.tipologia.localeCompare(b.tipologia, "it") ||
+                nome(a).localeCompare(nome(b), "it"));
+    }
+
+    function aggiorna() {
+        chips("f_prodotto", conta(prodotti, "prodotto"), scelte.prodotto);
+
+        // Tipologie solo dei prodotti scelti
+        const perTipologia = prodotti.filter(p => scelte.prodotto.has(p.prodotto));
+        const tipologie = conta(perTipologia, "tipologia");
+        for (const t of [...scelte.tipologia]) if (!tipologie.some(([v]) => v === t)) scelte.tipologia.delete(t);
+        document.getElementById("box_tipologia").hidden = tipologie.length < 2;
+        chips("f_tipologia", tipologie, scelte.tipologia);
+
+        chips("f_tema", conta(prodotti.filter(p => !scelte.prodotto.size || scelte.prodotto.has(p.prodotto)), "tema"), scelte.tema);
+        mostraAnteprima();
+    }
+
+    function mostraAnteprima() {
+        const lista = filtrati();
+        const box = document.getElementById("anteprima");
+        box.innerHTML = lista.map(p => {
+            const foto = coloriPer[p.id]?.[0]?.percorsoimmagine;
+            const img = foto ? `<img src="${foto}" alt="" loading="lazy">` : `<div class="no-img"></div>`;
+            return `<div class="bro-item${esclusi.has(p.id) ? " escluso" : ""}" onclick="cambiaInclusione('${p.id}', this)">
+                ${img}<i class="tick">✓</i><span>${nome(p)}</span>
+            </div>`;
+        }).join("") || `<p class="hint">Nessun prodotto con questi filtri.</p>`;
+        aggiornaConteggio();
+    }
+
+    function cambiaInclusione(id, el) {
+        esclusi.has(id) ? esclusi.delete(id) : esclusi.add(id);
+        el.classList.toggle("escluso", esclusi.has(id));
+        aggiornaConteggio();
+    }
+
+    function includiTutti(si) {
+        for (const p of filtrati()) si ? esclusi.delete(p.id) : esclusi.add(p.id);
+        mostraAnteprima();
+    }
+
+    const selezionati = () => filtrati().filter(p => !esclusi.has(p.id));
+
+    function aggiornaConteggio() {
+        const n = selezionati().length;
+        document.getElementById("conteggio").textContent = `${n} ${n === 1 ? "prodotto" : "prodotti"} nel PDF`;
+        document.getElementById("btnPdf").textContent = `Crea PDF (${n})`;
+    }
+
+    function scegliColonne(btn) {
+        document.querySelectorAll("[data-cols]").forEach(b => b.classList.toggle("active", b === btn));
+        colonne = Number(btn.dataset.cols);
+    }
+
+    // Titolo e contatti restano salvati su questo telefono
+    function ricordaOpzioni() {
+        try {
+            localStorage.setItem("brochure", JSON.stringify({
+                titolo: document.getElementById("o_titolo").value,
+                contatti: document.getElementById("o_contatti").value
+            }));
+        } catch (e) {}
+    }
+    function leggiOpzioni() {
+        try {
+            const o = JSON.parse(localStorage.getItem("brochure") || "{}");
+            if (o.titolo) document.getElementById("o_titolo").value = o.titolo;
+            if (o.contatti) document.getElementById("o_contatti").value = o.contatti;
+        } catch (e) {}
+    }
+
+    // ---------- Foto per il PDF ----------
+    // Le foto passano dalla copia salvata sul telefono (service worker), quindi
+    // di solito non consumano traffico Supabase
+    const fotoPronte = new Map();
+
+    async function preparaFoto(url, maxPx) {
+        const chiave = url + "|" + maxPx;
+        if (fotoPronte.has(chiave)) return fotoPronte.get(chiave);
+        let risultato = null;
+        try {
+            const res = await fetch(url, { mode: "cors", credentials: "omit" });
+            if (res.ok) {
+                const im = await apriImmagine(await res.blob());
+                const larg = im.width || im.naturalWidth, alt = im.height || im.naturalHeight;
+                const s = Math.min(1, maxPx / Math.max(larg, alt));
+                const w = Math.max(1, Math.round(larg * s));
+                const h = Math.max(1, Math.round(alt * s));
+                const cv = document.createElement("canvas");
+                cv.width = w; cv.height = h;
+                const ctx = cv.getContext("2d");
+                ctx.fillStyle = "#ffffff";           // le parti trasparenti diventano bianche
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(im, 0, 0, w, h);
+                if (im.close) im.close();
+                risultato = { data: cv.toDataURL("image/jpeg", 0.86), w, h, alias: chiave };
+            }
+        } catch (e) {
+            console.warn("Foto non caricata:", url, e);
+        }
+        fotoPronte.set(chiave, risultato);
+        return risultato;
+    }
+
+    // createImageBitmap è il metodo più affidabile; se manca uso un'immagine normale
+    async function apriImmagine(blob) {
+        if (window.createImageBitmap) {
+            try { return await createImageBitmap(blob); } catch (e) {}
+        }
+        const src = URL.createObjectURL(blob);
+        try {
+            return await new Promise((ok, ko) => {
+                const im = new Image();
+                im.onload = () => ok(im);
+                im.onerror = ko;
+                im.src = src;
+            });
+        } finally {
+            setTimeout(() => URL.revokeObjectURL(src), 0);
+        }
+    }
+
+    async function inParallelo(lavori, quanti, avanzamento) {
+        let fatti = 0, i = 0;
+        async function operaio() {
+            while (i < lavori.length) {
+                const lavoro = lavori[i++];
+                await lavoro();
+                avanzamento(++fatti, lavori.length);
+            }
+        }
+        await Promise.all(Array.from({ length: quanti }, operaio));
+    }
+
+    // ---------- PDF ----------
+    const A4 = { w: 210, h: 297 };
+    const M = 14;                       // margine laterale
+    const TOP = 22, BOTTOM = 283;       // area dei contenuti
+    const LEGNO = [138, 95, 47], LEGNO_CHIARO = [201, 163, 107], TESTO = [31, 27, 22], GRIGIO = [111, 102, 90];
+
+    async function creaPDF() {
+        const lista = selezionati();
+        if (!lista.length) {
+            alert("Non c'è nessun prodotto da mettere nel PDF.");
+            return;
+        }
+        if (!window.jspdf) {
+            alert("Serve la connessione a internet per creare il PDF.");
+            return;
+        }
+
+        const btn = document.getElementById("btnPdf");
+        btn.disabled = true;
+
+        const o = {
+            cols: colonne,
+            prezzi: document.getElementById("o_prezzi").checked,
+            colori: document.getElementById("o_colori").checked,
+            titolo: document.getElementById("o_titolo").value.trim() || "Catalogo",
+            contatti: document.getElementById("o_contatti").value.trim()
+        };
+        o.cw = (A4.w - 2 * M - (o.cols - 1) * 6) / o.cols;      // larghezza scheda
+        o.ih = o.cols === 3 ? 44 : 72;                          // altezza foto
+        o.th = o.cols === 3 ? 8 : 10;                           // miniature colori
+        o.fotoPx = o.cols === 3 ? 900 : 1300;
+
+        try {
+            // 1) preparo tutte le foto
+            const lavori = [];
+            for (const p of lista) {
+                const colori = coloriPer[p.id] || [];
+                if (colori[0]?.percorsoimmagine) lavori.push(() => preparaFoto(colori[0].percorsoimmagine, o.fotoPx));
+                if (o.colori && colori.length > 1) {
+                    for (const c of colori) if (c.percorsoimmagine) lavori.push(() => preparaFoto(c.percorsoimmagine, 220));
+                }
+            }
+            lavori.push(() => preparaFoto(new URL("logo.png", location.href).href, 900));
+            await inParallelo(lavori, 6, (n, tot) => { btn.textContent = `Preparo le foto… ${n}/${tot}`; });
+
+            // 2) impagino
+            btn.textContent = "Creo il PDF…";
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
+            await copertina(doc, lista, o);
+            await pagineProdotti(doc, lista, o);
+
+            const nome = "GE WoodArt - " + o.titolo + (scelte.prodotto.size ? " " + [...scelte.prodotto].map(bello).join(" ") : "") + ".pdf";
+            doc.save(nome.replace(/[\\/:*?"<>|]/g, ""));
+        } catch (e) {
+            console.error(e);
+            alert("Errore durante la creazione del PDF.");
+        } finally {
+            btn.disabled = false;
+            aggiornaConteggio();
+        }
+    }
+
+    async function copertina(doc, lista, o) {
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, 0, A4.w, A4.h, "F");
+
+        const logo = await preparaFoto(new URL("logo.png", location.href).href, 900);
+        if (logo) doc.addImage(logo.data, "JPEG", (A4.w - 120) / 2, 40, 120, 120 * logo.h / logo.w, logo.alias, "FAST");
+
+        doc.setTextColor(...LEGNO_CHIARO);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(34);
+        doc.text(o.titolo, A4.w / 2, 190, { align: "center" });
+
+        const sottotitolo = [
+            scelte.prodotto.size ? [...scelte.prodotto].map(bello).join(" · ") : "Tutti i prodotti",
+            scelte.tema.size ? [...scelte.tema].map(bello).join(" · ") : ""
+        ].filter(Boolean).join("  —  ");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(13);
+        doc.setTextColor(225, 218, 208);
+        doc.text(doc.splitTextToSize(sottotitolo, A4.w - 50), A4.w / 2, 203, { align: "center" });
+
+        doc.setFontSize(11);
+        doc.setTextColor(166, 157, 144);
+        const mese = new Date().toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+        doc.text(`${bello(mese)} · ${lista.length} ${lista.length === 1 ? "prodotto" : "prodotti"}`, A4.w / 2, 222, { align: "center" });
+
+        if (o.contatti) {
+            doc.setFontSize(12);
+            doc.setTextColor(...LEGNO_CHIARO);
+            doc.text(o.contatti, A4.w / 2, 270, { align: "center" });
+        }
+    }
+
+    function intestazione(doc, sezione, o) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...LEGNO);
+        doc.text("GE WoodArt", M, 12);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...GRIGIO);
+        doc.text(sezione, A4.w - M, 12, { align: "right" });
+        doc.setDrawColor(...LEGNO_CHIARO);
+        doc.setLineWidth(0.3);
+        doc.line(M, 15, A4.w - M, 15);
+
+        doc.setFontSize(8);
+        if (o.contatti) doc.text(o.contatti, M, 290);
+        doc.text(String(doc.getNumberOfPages()), A4.w - M, 290, { align: "right" });
+    }
+
+    function altezzaScheda(o) {
+        let h = o.ih + 2.5 + 8.2;                // foto + descrizione (max 2 righe)
+        if (o.prezzi) h += 5.5;
+        if (o.colori) h += o.th + 1.5 + 6.5;     // miniature + nomi dei colori (max 2 righe)
+        return h + 1.5;
+    }
+
+    async function pagineProdotti(doc, lista, o) {
+        const H = altezzaScheda(o);
+        const GAP_RIGA = 5, TITOLO = 13;
+        let y = BOTTOM;                  // forza una pagina nuova al primo prodotto
+        let gruppo = null, sezione = "";
+        let colonna = 0;
+
+        for (const p of lista) {
+            const nuovoGruppo = p.prodotto + "|" + p.tipologia;
+            if (nuovoGruppo !== gruppo) {
+                gruppo = nuovoGruppo;
+                sezione = bello(p.prodotto) + (p.tipologia && p.tipologia !== p.prodotto && p.tipologia !== "ALTRO" ? " · " + bello(p.tipologia) : "");
+                if (colonna !== 0) { y += H + GAP_RIGA; colonna = 0; }
+                if (y > TOP) y += 3;     // un po' d'aria prima di una nuova sezione
+                if (y + TITOLO + H > BOTTOM) {
+                    doc.addPage();
+                    intestazione(doc, sezione, o);
+                    y = TOP;
+                }
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(15);
+                doc.setTextColor(...TESTO);
+                doc.text(sezione, M, y + 6);
+                doc.setDrawColor(...LEGNO_CHIARO);
+                doc.setLineWidth(0.6);
+                doc.line(M, y + 8.5, M + 18, y + 8.5);
+                y += TITOLO;
+            } else if (colonna === 0 && y + H > BOTTOM) {
+                doc.addPage();
+                intestazione(doc, sezione, o);
+                y = TOP;
+            }
+
+            await scheda(doc, p, M + colonna * (o.cw + 6), y, o);
+            colonna++;
+            if (colonna === o.cols) { colonna = 0; y += H + GAP_RIGA; }
+        }
+    }
+
+    async function scheda(doc, p, x, y, o) {
+        const colori = coloriPer[p.id] || [];
+
+        // Foto intera (non tagliata) su fondo chiaro
+        doc.setFillColor(245, 242, 237);
+        doc.roundedRect(x, y, o.cw, o.ih, 2, 2, "F");
+        const foto = colori[0]?.percorsoimmagine ? await preparaFoto(colori[0].percorsoimmagine, o.fotoPx) : null;
+        if (foto) {
+            const s = Math.min(o.cw / foto.w, o.ih / foto.h);
+            const w = foto.w * s, h = foto.h * s;
+            doc.addImage(foto.data, "JPEG", x + (o.cw - w) / 2, y + (o.ih - h) / 2, w, h, foto.alias, "FAST");
+        }
+        let cy = y + o.ih + 2.5;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(o.cols === 3 ? 9.5 : 11);
+        doc.setTextColor(...TESTO);
+        const righe = doc.splitTextToSize(nome(p), o.cw).slice(0, 2);
+        doc.text(righe, x, cy, { baseline: "top", lineHeightFactor: 1.15 });
+        cy += 8.2;
+
+        if (o.prezzi && p.prezzo) {
+            doc.setFontSize(o.cols === 3 ? 10 : 11.5);
+            doc.setTextColor(...LEGNO);
+            doc.text(euro(p.prezzo), x, cy, { baseline: "top" });
+        }
+        if (o.prezzi) cy += 5.5;
+
+        if (o.colori && colori.length > 1) {
+            const passo = o.th + 1.5;
+            const quante = Math.min(colori.length, Math.floor((o.cw + 1.5) / passo));
+            for (let i = 0; i < quante; i++) {
+                const mini = colori[i].percorsoimmagine ? await preparaFoto(colori[i].percorsoimmagine, 220) : null;
+                const mx = x + i * passo;
+                doc.setFillColor(245, 242, 237);
+                doc.roundedRect(mx, cy, o.th, o.th, 1, 1, "F");
+                if (mini) {
+                    const s = Math.min(o.th / mini.w, o.th / mini.h);
+                    doc.addImage(mini.data, "JPEG", mx + (o.th - mini.w * s) / 2, cy + (o.th - mini.h * s) / 2, mini.w * s, mini.h * s, mini.alias, "FAST");
+                }
+            }
+            cy += o.th + 1.5;
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(7.5);
+            doc.setTextColor(...GRIGIO);
+            const nomi = colori.map(c => c.descrizione).filter(Boolean).join(" · ");
+            doc.text(doc.splitTextToSize(nomi, o.cw).slice(0, 2), x, cy, { baseline: "top", lineHeightFactor: 1.15 });
+        }
+    }
+
+    leggiOpzioni();
+    carica();
+</script>
+</body>
+</html>

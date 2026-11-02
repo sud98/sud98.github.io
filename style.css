@@ -726,3 +726,82 @@ th.sortable .freccia { color: var(--accent); font-size: 11px; }
 .order-edit #info_stato { display: flex; align-items: center; min-height: var(--tap); font-weight: 700; }
 .order-edit .salvato { margin: 0; min-height: 1em; font-size: 13px; font-weight: 700; color: var(--ok); }
 .order-edit .salvato:empty { display: none; }
+
+/* ---------- Brochure ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.chip small { margin-left: 2px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.chip.on small { color: inherit; opacity: 0.75; }
+
+.check { display: flex; align-items: center; gap: 12px; min-height: 44px; font-weight: 600; cursor: pointer; }
+.check input {
+    appearance: auto;
+    -webkit-appearance: checkbox;
+    width: 22px;
+    height: 22px;
+    min-height: 0;
+    padding: 0;
+    flex: none;
+    accent-color: var(--accent);
+}
+
+.bro-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bro-links { display: flex; gap: 4px; }
+.link-btn {
+    min-height: 36px;
+    padding: 0 10px;
+    border: none;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.bro-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.bro-item {
+    position: relative;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.bro-item img, .bro-item .no-img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--surface-2);
+}
+.bro-item span { display: block; margin-top: 5px; font-size: 12px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.bro-item .tick {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 800;
+}
+.bro-item.escluso { opacity: 0.4; }
+.bro-item.escluso .tick { background: var(--surface-2); color: transparent; border: 2px solid var(--border); }
