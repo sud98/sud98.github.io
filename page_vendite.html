@@ -22,7 +22,19 @@
     <h1>Vendite</h1>
 </header>
 <main class="page">
-    <p class="hint">Tocca una vendita per selezionarla.</p>
+    <div class="filters">
+        <select id="filtro_prodotto" onchange="mostraTabella()">
+            <option value="">Tutti i prodotti</option>
+        </select>
+        <select id="filtro_tipologia" onchange="mostraTabella()">
+            <option value="">Tutte le tipologie</option>
+        </select>
+        <select id="filtro_tema" onchange="mostraTabella()">
+            <option value="">Tutti i temi</option>
+        </select>
+        <input type="text" id="filtro_testo" placeholder="Cerca..." oninput="mostraTabella()">
+    </div>
+    <p class="hint" id="riepilogo">Tocca una vendita per selezionarla.</p>
     <div class="table-wrap" id="tabella"><p>Caricamento…</p></div>
 </main>
 <footer class="action-bar">
@@ -38,27 +50,102 @@
         );
 
         let rigaSelezionata = null;
+        let vendite = [];
+        let mappaColorazioni = {};      // colorazioneid -> [foto]
+        let infoColore = {};            // colorazioneid -> { prodotto, tipologia, tema, testo }
+
+        // Supabase restituisce al massimo 1000 righe per volta: leggo a blocchi
+        async function leggiVendite() {
+            const tutte = [];
+            for (let da = 0; ; da += 1000) {
+                const { data, error } = await client
+                    .from("vendite")
+                    .select("*")
+                    .order("data", { ascending: false })
+                    .order("id", { ascending: false })
+                    .range(da, da + 999);
+                if (error) throw error;
+                tutte.push(...data);
+                if (data.length < 1000) return tutte;
+            }
+        }
 
         async function caricaTabella() {
-            const { data: vendite } =
-                await client.from("vendite").select("*").order("data", { ascending: false });
+            try {
+                const [lette, { data: colorazioni, error: e1 }, { data: prodotti, error: e2 }] = await Promise.all([
+                    leggiVendite(),
+                    client.from("colorazioni").select("*"),
+                    client.from("prodotti").select("id, prodotto, tipologia, tema, descrizione")
+                ]);
+                if (e1 || e2) throw e1 || e2;
+                vendite = lette;
 
-            const { data: colorazioni } =
-                await client.from("colorazioni").select("*");
+                const prodottoDa = {};
+                for (const p of prodotti) prodottoDa[p.id] = p;
 
-            if (!vendite || !colorazioni) {
+                mappaColorazioni = {};
+                infoColore = {};
+                for (const c of colorazioni) {
+                    if (!mappaColorazioni[c.id]) mappaColorazioni[c.id] = [];
+                    mappaColorazioni[c.id].push(c.percorsoimmagine);
+                    const p = prodottoDa[c.prodottoid] || {};
+                    infoColore[c.id] = {
+                        prodotto: p.prodotto, tipologia: p.tipologia, tema: p.tema,
+                        testo: [p.descrizione, c.descrizione].filter(Boolean).join(" ")
+                    };
+                }
+                // Anche le vendite di colori eliminati hanno il prodotto nel codice
+                for (const v of vendite) {
+                    const id = v.colorazioneid || "";
+                    if (!infoColore[id] && prodottoDa[id.split("_")[0]]) {
+                        const p = prodottoDa[id.split("_")[0]];
+                        infoColore[id] = { prodotto: p.prodotto, tipologia: p.tipologia, tema: p.tema, testo: p.descrizione || "" };
+                    }
+                }
+
+                riempiFiltro("filtro_prodotto", prodotti.map(p => p.prodotto));
+                riempiFiltro("filtro_tipologia", prodotti.map(p => p.tipologia));
+                riempiFiltro("filtro_tema", prodotti.map(p => p.tema));
+                mostraTabella();
+            } catch (e) {
+                console.error(e);
                 document.getElementById("tabella").innerHTML = "<p>Errore nel caricamento</p>";
-                return;
             }
+        }
 
-            const mappaColorazioni = {};
-            for (const c of colorazioni) {
-                if (!mappaColorazioni[c.id]) mappaColorazioni[c.id] = [];
-                mappaColorazioni[c.id].push(c.percorsoimmagine);
-            }
+        function riempiFiltro(id, valori) {
+            const sel = document.getElementById(id);
+            sel.length = 1;
+            [...new Set(valori.filter(Boolean))].sort((a, b) => a.localeCompare(b, "it")).forEach(v => {
+                const opt = document.createElement("option");
+                opt.value = v;
+                opt.textContent = v;
+                sel.appendChild(opt);
+            });
+        }
 
-            document.getElementById("tabella").innerHTML =
-                generaHTMLTabella(vendite, mappaColorazioni);
+        function mostraTabella() {
+            const fProd = document.getElementById("filtro_prodotto").value;
+            const fTip  = document.getElementById("filtro_tipologia").value;
+            const fTema = document.getElementById("filtro_tema").value;
+            const fTesto = document.getElementById("filtro_testo").value.trim().toLowerCase();
+
+            const lista = vendite.filter(v => {
+                const info = infoColore[v.colorazioneid] || {};
+                if (fProd && info.prodotto !== fProd) return false;
+                if (fTip  && info.tipologia !== fTip) return false;
+                if (fTema && info.tema !== fTema) return false;
+                if (fTesto && ![v.colorazioneid, v.destinatario, info.testo]
+                        .some(t => (t || "").toLowerCase().includes(fTesto))) return false;
+                return true;
+            });
+
+            const totale = lista.reduce((s, v) => s + Number(v.prezzo || 0), 0);
+            document.getElementById("riepilogo").textContent =
+                `${lista.length} ${lista.length === 1 ? "vendita" : "vendite"} · € ${totale.toFixed(2)}. Tocca una vendita per selezionarla.`;
+
+            document.getElementById("tabella").innerHTML = generaHTMLTabella(lista, mappaColorazioni);
+            rigaSelezionata = null;
         }
 
         function generaHTMLTabella(dati, mappaColorazioni) {
@@ -95,12 +182,10 @@
             tr.classList.add("selezionata");
 
             rigaSelezionata = Number(tr.dataset.id);
-            console.log("ID selezionato:", rigaSelezionata);
         }
 
 
         async function eliminaRiga() {
-            console.log(rigaSelezionata);
             if (!rigaSelezionata) {
                 alert("Seleziona una riga prima di eliminare.");
                 return;

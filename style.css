@@ -821,3 +821,11 @@ table.stock-list td.stock input::-webkit-inner-spin-button,
 table.stock-list td.stock input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 table.stock-list tr.esaurito td.stock input { color: var(--danger); background: var(--danger-soft); }
 table.stock-list tr.esaurito td.foto img { opacity: 0.55; }
+
+/* ---------- Acquisti ---------- */
+.modificabile {
+    display: inline-block; min-width: 120px; cursor: text;
+    text-decoration: underline dotted var(--muted); text-underline-offset: 4px;
+}
+.modificabile:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wide td input[type="date"] { min-width: 140px; }
