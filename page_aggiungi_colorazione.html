@@ -63,13 +63,47 @@ async function salvaColorazione() {
         return;
     }
 
-    // 2️⃣ Calcolo il prossimo ID
-    const { data: existing } = await db
-        .from("colorazioni")
-        .select("id")
-        .eq("prodottoid", prodottoID);
+    // 2️⃣ Calcolo il prossimo ID: il primo numero libero.
+    //    Se era di un colore eliminato che ha ancora vendite od ordini chiedo:
+    //    riusandolo, quelle vendite prendono foto e nome del colore nuovo.
+    const prefisso = prodottoID + "_";
+    const [colori, vendite, ordini] = await Promise.all([
+        db.from("colorazioni").select("id").eq("prodottoid", prodottoID),
+        db.from("vendite").select("colorazioneid").like("colorazioneid", prodottoID + "%"),
+        db.from("ordine_dettaglio").select("colorazioneid").like("colorazioneid", prodottoID + "%")
+    ]);
 
-    const nextNumber = existing.length + 1;
+    if (colori.error || vendite.error || ordini.error) {
+        console.error(colori.error || vendite.error || ordini.error);
+        alert("Errore leggendo i colori del prodotto");
+        return;
+    }
+
+    const numero = id => id && id.startsWith(prefisso) ? parseInt(id.slice(prefisso.length), 10) : NaN;
+    const contaPer = lista => {
+        const m = {};
+        for (const r of lista) { const n = numero(r.colorazioneid); if (!isNaN(n)) m[n] = (m[n] || 0) + 1; }
+        return m;
+    };
+    const venditePer = contaPer(vendite.data);
+    const ordiniPer = contaPer(ordini.data);
+    const colorEsistenti = new Set(colori.data.map(c => numero(c.id)));
+
+    let nextNumber = 1;
+    while (colorEsistenti.has(nextNumber)) nextNumber++;
+
+    const nVendite = venditePer[nextNumber] || 0, nOrdini = ordiniPer[nextNumber] || 0;
+    if (nVendite || nOrdini) {
+        const codice = prefisso + String(nextNumber).padStart(2, "0");
+        const cosa = [nVendite && `${nVendite} ${nVendite === 1 ? "vendita" : "vendite"}`,
+                      nOrdini && `${nOrdini} ${nOrdini === 1 ? "riga d'ordine" : "righe d'ordine"}`].filter(Boolean).join(" e ");
+        const riusa = confirm(`Il codice ${codice} era di un colore eliminato e ha ancora ${cosa}.\n\n` +
+            `OK = riusa ${codice}: quelle vendite prendono foto e nome del colore nuovo.\n` +
+            `Annulla = usa un codice nuovo.`);
+        if (!riusa) {
+            while (colorEsistenti.has(nextNumber) || venditePer[nextNumber] || ordiniPer[nextNumber]) nextNumber++;
+        }
+    }
     const id = `${prodottoID}_${String(nextNumber).padStart(2, "0")}`;
 
     // 3️⃣ Carico l'immagine su Supabase Storage
